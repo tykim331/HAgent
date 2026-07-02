@@ -1,0 +1,6 @@
+{
+  "name": "H-Agent Hub",
+  "description": "현대코퍼레이션그룹 사내 AI Agent 공유 및 갤러리 플랫폼",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
