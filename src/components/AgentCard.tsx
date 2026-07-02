@@ -1,6 +1,6 @@
 import React from 'react';
 import { Agent } from '../types';
-import { ThumbsUp, Eye, Award, CheckCircle, Sparkles, Trophy } from 'lucide-react';
+import { ThumbsUp, Eye } from 'lucide-react';
 import { CATEGORY_LABELS, CATEGORY_COLORS } from '../data/mockData';
 
 interface AgentCardProps {
@@ -52,15 +52,6 @@ export default function AgentCard({ agent, onSelect }: AgentCardProps) {
             {CATEGORY_LABELS[agent.category]}
           </span>
         </div>
-
-        {agent.badge && agent.badge === 'creative' && (
-          <div className="absolute top-3 right-3 z-10">
-            <span className="flex items-center space-x-1 bg-purple-600 text-white px-2 py-0.5 rounded-full text-[10px] font-extrabold tracking-tight shadow border border-purple-400">
-              <Sparkles className="h-3 w-3" />
-              <span>창의 혁신상</span>
-            </span>
-          </div>
-        )}
 
         {/* Date on bottom right */}
         <span className="absolute bottom-3 right-3 text-[10px] text-slate-200 bg-slate-900/40 px-2 py-0.5 rounded-md font-bold">

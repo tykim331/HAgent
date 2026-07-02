@@ -249,12 +249,6 @@ export default function AgentDetail({
               <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold tracking-wide border ${CATEGORY_COLORS[agent.category]?.bg} ${CATEGORY_COLORS[agent.category]?.text} ${CATEGORY_COLORS[agent.category]?.border}`}>
                 {CATEGORY_LABELS[agent.category]}
               </span>
-              {agent.badge && agent.badge === 'creative' && (
-                <span className="flex items-center space-x-1 bg-purple-600 text-white px-2 py-0.5 rounded-full text-[10px] font-bold border border-purple-400">
-                  <Sparkles className="h-2.5 w-2.5" />
-                  <span>창의 혁신상</span>
-                </span>
-              )}
             </div>
             <h2 className="text-xl font-extrabold tracking-tight text-white leading-snug">{agent.name}</h2>
             <p className="text-slate-300 text-xs flex items-center gap-1.5 font-medium">
