@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Agent, CategoryType, User } from '../types';
 import { 
-  X, Plus, Trash2, HelpCircle, Save, Info, Sparkles, Terminal, BookOpen, AlertCircle 
+  X, Plus, Trash2, HelpCircle, Save, Info, Sparkles, Terminal, BookOpen, AlertCircle, Code 
 } from 'lucide-react';
 import { CATEGORY_LABELS } from '../data/mockData';
 
@@ -226,21 +226,21 @@ export default function AgentForm({
           {/* Right Column: Code and Implementation */}
           <div className="space-y-5">
             <h3 className="text-sm font-bold text-slate-900 border-b border-slate-100 pb-1.5 flex items-center gap-1.5">
-              <Terminal className="h-4 w-4 text-hyundai-blue" />
-              <span>핵심 지침 및 프롬프트</span>
+              <Code className="h-4 w-4 text-hyundai-blue" />
+              <span>핵심 지침 및 구현 소스 코드</span>
             </h3>
 
             {/* System Prompt / Code */}
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
-                <label className="text-xs font-bold text-slate-700">시스템 프롬프트 (System Instruction)</label>
-                <span className="text-[10px] text-slate-400 font-medium">마크다운 서식 지원</span>
+                <label className="text-xs font-bold text-slate-700">구현 소스 코드 및 알고리즘 스크립트</label>
+                <span className="text-[10px] text-slate-400 font-medium">코드 서식 지원</span>
               </div>
               <textarea
                 required
                 value={prompt}
                 onChange={(e) => setPrompt(e.target.value)}
-                placeholder="[System Role & Identity]&#10;당신은 현대코퍼레이션 철강 원가 분석가 AI입니다...&#10;&#10;[Rules]&#10;1. 바이어 사양에 맞춰 적정 마진을 계산해..."
+                placeholder="import os&#10;from google import genai&#10;...&#10;def run_agent_engine(data):&#10;    # 에이전트 핵심 구현 코드를 입력하세요"
                 rows={9}
                 className="w-full text-xs p-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-hyundai-blue font-mono leading-relaxed bg-slate-50"
                 id="form-textarea-prompt"

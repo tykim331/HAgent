@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Agent, Comment, User } from '../types';
 import { 
   X, ThumbsUp, Eye, Copy, Check, MessageSquare, Award, Send, 
-  Play, Calendar, Contact, AlertCircle, Sparkles, Trophy, Shield, Terminal
+  Play, Calendar, Contact, AlertCircle, Sparkles, Trophy, Shield, Terminal, Code
 } from 'lucide-react';
 import { CATEGORY_LABELS, CATEGORY_COLORS, REACTION_EMOJIS } from '../data/mockData';
 
@@ -302,8 +302,8 @@ export default function AgentDetail({
               activeTab === 'prompt' ? 'border-hyundai-blue text-hyundai-blue bg-white font-extrabold' : 'border-transparent text-slate-500 hover:text-slate-800'
             }`}
           >
-            <Terminal className="h-4 w-4" />
-            <span>프롬프트 공유</span>
+            <Code className="h-4 w-4" />
+            <span>코드 공유</span>
           </button>
         </div>
 
@@ -443,8 +443,8 @@ export default function AgentDetail({
             <div className="space-y-4 animate-fade-in" id="tab-prompt">
               <div className="flex items-center justify-between">
                 <h4 className="text-sm font-bold text-slate-900 flex items-center gap-1.5">
-                  <Terminal className="h-4 w-4 text-hyundai-blue" />
-                  <span>시스템 프롬프트 전문 (System Prompt Core)</span>
+                  <Code className="h-4 w-4 text-hyundai-blue" />
+                  <span>핵심 구현 소스 코드 (Core Logic Code)</span>
                 </h4>
                 <button
                   onClick={handleCopyPrompt}
@@ -459,7 +459,7 @@ export default function AgentDetail({
                   ) : (
                     <>
                       <Copy className="h-3.5 w-3.5" />
-                      <span>프롬프트 복사</span>
+                      <span>코드 복사</span>
                     </>
                   )}
                 </button>
@@ -471,7 +471,7 @@ export default function AgentDetail({
                 </pre>
               </div>
               <p className="text-[11px] text-slate-400 font-medium">
-                💡 프롬프트의 지침(System Instructions)을 복사해 사내 ChatGPT, Claude, 또는 Gemini 챗창에 그대로 복사하여 사용할 수 있습니다.
+                💡 구현된 백엔드 또는 비즈니스 연산 소스 코드를 복사하여 사내 시스템 연동 및 분석용 스크립트로 즉시 활용할 수 있습니다.
               </p>
             </div>
           )}

@@ -19,28 +19,38 @@ export const INITIAL_AGENTS: Agent[] = [
       'AI가 최근 4개년 선적 통계와 현재 포트 혼잡도를 매칭하여 "선사별 선복 확보 성공률 점수"를 도출합니다.',
       '추천 선적 주차 및 선사 네고용 타겟 요율 가이드를 담은 PDF 브리핑 보고서를 생성합니다.'
     ],
-    prompt: `[System Role & Identity]
-You are the Hyundai Corporation Global Logistics & Maritime AI Assistant. Your role is to analyze international steel shipping cargo trends and predict regional ocean freight capacity (선복량) and freight rates (운임) for the next 1-4 weeks, specifically targeting Southeast Asian routes.
+    prompt: `import pandas as pd
+import numpy as np
+from sklearn.ensemble import RandomForestRegressor
 
-[Core Analytical Parameters]
-1. SCFI (Shanghai Containerized Freight Index) Trends
-2. Major Port Congestion Indexes (Singapore, Port Klang, Ho Chi Minh)
-3. Historical shipment data of steel products (Hot Rolled Coils, Cold Rolled Coils, Plates, etc.)
-4. Fleet supply and demand balance indicator.
-
-[Output Format]
-Please structure your forecast report as follows:
-## 1. 노선별 선복량 및 운임 예측 요약 (1-4주차)
-Provide a structured markdown table with weekly rating: Safe (안정), Tight (혼잡), Critical (확보 난망) and predicted freight rate range per TEU.
-
-## 2. 주요 정체 항만 모니터링 현황
-Summarize the current terminal waiting times and potential impact on steel cargo.
-
-## 3. 선사 협상용 타겟 요율 (Target Rate) 및 가이드라인
-Recommend specific target rate ranges for negotiations and high-probability shipping lines.
-
-## 4. 물류 담당자 행동 제안 (Action Items)
-Provide actionable strategic options (e.g., "Shift loading to Week 3 to save $150/TEU").`,
+def predict_shipping_capacity(port_data, scfi_index, historical_shipments):
+    """
+    동남아 노선 철강 선복량 및 적정 운임 예측 모델
+    - SCFI(상해컨테이너운임지수) 트렌드 및 항만 정체 지수 활용
+    """
+    # 1. 특성 공학 (Feature Engineering)
+    df = pd.merge(port_data, scfi_index, on='date')
+    df['rolling_scfi'] = df['scfi'].rolling(window=4, min_periods=1).mean()
+    df['port_congestion_index'] = df['waiting_ships'] / df['max_capacity']
+    
+    # 2. 독립변수 및 종속변수 정의
+    features = ['rolling_scfi', 'port_congestion_index', 'historical_volume', 'seasonality_index']
+    X = df[features]
+    y_rate = df['freight_rate_per_teu']
+    y_capacity = df['allocated_capacity']
+    
+    # 3. 모델 학습 및 예측
+    model_rate = RandomForestRegressor(n_estimators=100, random_state=42)
+    model_rate.fit(X, y_rate)
+    
+    model_capacity = RandomForestRegressor(n_estimators=100, random_state=42)
+    model_capacity.fit(X, y_capacity)
+    
+    return {
+        "predicted_rate_range": (model_rate.predict(X[-1:])[0] * 0.95, model_rate.predict(X[-1:])[0] * 1.05),
+        "predicted_capacity_teu": int(model_capacity.predict(X[-1:])[0]),
+        "congestion_risk": "High" if df['port_congestion_index'].iloc[-1] > 0.75 else "Stable"
+    }`,
     creatorName: '김현우 과장',
     creatorDept: '철강1본부 수출영업팀',
     creatorContact: 'hw.kim@hyundaicorp.com / 사내 메신저: hw_steel',
@@ -75,24 +85,44 @@ Provide actionable strategic options (e.g., "Shift loading to Week 3 to save $15
       '에이전트가 텍스트를 고속 분석하여 "요주의 조항", "불리한 중재 조항", "의무 사항"으로 나누어 출력합니다.',
       '제시된 리스크에 맞춰 공급업체에 보낼 대체 반박 문구(Alternative Clauses)를 다운받아 조율을 진행합니다.'
     ],
-    prompt: `[System Role & Identity]
-You are the Lead Legal & Trade Agent at Hyundai Corporation Group. Your mission is to audit international raw material purchase agreements, highlight legal risks, and drafts counter-clauses.
+    prompt: `import os
+from google import genai
+from google.genai import types
 
-[Rules for Contract Analysis]
-1. Focus on:
-   - Limitation of Liability (책임 한도)
-   - Liquidation Damages & Delay Penalties (지체상금 및 패널티)
-   - Force Majeure (불가항력 면책 범위)
-   - Governing Law & Dispute Resolution (준거법 및 중재 관할)
-   - IP Rights & Confidentiality (지식재산권 및 비밀유지)
-2. Always assess risk level for each segment: High Risk (🔴 빨강), Medium Risk (🟡 노랑), Low/Acceptable Risk (🟢 초록).
-3. Offer concrete, legally sound alternative draft suggestions in standard international trade English.
-
-[Output Structure]
-- **계약서 주요 개요 요약**
-- **조항별 리스크 평가 테이블 (조항 번호 | 핵심 내용 | 위험 수준 | 상세 이유)**
-- **🔴 핵심 독소 조항 리스크 및 수정 제안** (Detailing alternative text)
-- **실무 부서 협상 팁 (Negotiation Strategy Guide)**`,
+def analyze_raw_material_contract(contract_text: str) -> dict:
+    """
+    영문 원자재 구매 계약서 독소 조항 분석 엔진
+    - Google GenAI (Gemini 3.5 Flash) 기반 파싱 및 1차 스크리닝
+    """
+    client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
+    
+    prompt = f"""
+    당신은 현대코퍼레이션 법무 및 원자재 무역 계약 전문가입니다.
+    다음 영문 석유화학 원자재 계약서를 엄격하게 분석하여 독소 조항 및 법적 리스크를 분석하십시오.
+    
+    [분석 대상 계약서]
+    {{contract_text}}
+    
+    [주요 체크포인트]
+    1. 책임 제한 한도(Limitation of Liability) 규정의 아군 독소 유무
+    2. 지체상금(Liquidated Damages) 상한선 적정성 여부
+    3. 불가항력(Force Majeure) 조항의 편향성 검토
+    4. 준거법(Governing Law) 및 중재(Dispute Resolution) 관할지 체크
+    
+    [출력 포맷 JSON]
+    - summary: 계약서 전체 리스크 요약
+    - risks: [ {{{{ clause: "조항명", level: "HIGH/MID/LOW", reason: "위험 이유", counter_clause: "반박 및 수정 제안 문구" }}}} ]
+    """
+    
+    response = client.models.generate_content(
+        model='gemini-3.5-flash',
+        contents=prompt,
+        config=types.GenerateContentConfig(
+            response_mime_type="application/json"
+        )
+    )
+    
+    return response.text`,
     creatorName: '이지혜 대리',
     creatorDept: '화학영업2팀 & 화학법무지원TF',
     creatorContact: 'jh.lee@hyundaicorp.com / 사내 메신저: jh_chem',
@@ -126,22 +156,50 @@ You are the Lead Legal & Trade Agent at Hyundai Corporation Group. Your mission 
       '해당 품목에 부과될 수 있는 기본 관세 및 긴급 수입제한조치(세이프가드) 리스크를 평가합니다.',
       '보고서 형식으로 다운로드하여 아침 미팅 및 유관 부서 회람용으로 사용합니다.'
     ],
-    prompt: `[System Role & Identity]
-You are the Hyundai Global Economy & Trade Regulation Intelligence Agent. Your core objective is to analyze trade barriers, antidumping duties, and ESG-related carbon taxes (such as EU CBAM) based on global official announcements.
+    prompt: `import axios from 'axios';
+import * as cheerio from 'cheerio';
 
-[Core Focus Areas]
-- Section 232 Steel tariffs or country-specific quotas (미국 무역확장법 232조)
-- Anti-dumping and countervailing duty margins (반덤핑 및 상계관세 마진 요율)
-- EU Carbon Border Adjustment Mechanism compliance timeline (EU 탄소국경조정제도 일정)
-- Trade sanction updates affecting steel, petrochemicals, or energy trades.
+interface TradeAlert {
+  title: string;
+  country: string;
+  category: string;
+  url: string;
+  date: string;
+}
 
-[Strict Formatting Instructions]
-Structure your trade brief beautifully:
-# [글로벌 통상 규제 & 관세 긴급 브리핑]
-## 🚨 1. 신규 탐지 무역 장벽 및 리스크 등급 (Critical / Warning / Info)
-## 📊 2. HS Code 기준 현행 vs 신규 관세율 비교
-## 🌿 3. 탄소배출/CBAM 준수 체크리스트 영향성
-## 📑 4. 실무 영업 본부 추천 전략 및 계약서 특약 권장 사항`,
+export async function scrapeUSDOCTariffs(): Promise<TradeAlert[]> {
+  const url = 'https://www.trade.gov/press-releases';
+  const alerts: TradeAlert[] = [];
+  
+  try {
+    const { data } = await axios.get(url, {
+      headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' }
+    });
+    const $ = cheerio.load(data);
+    
+    $('.views-row').each((_, element) => {
+      const titleText = $(element).find('.field-content a').text().trim();
+      const link = 'https://www.trade.gov' + $(element).find('.field-content a').attr('href');
+      const dateText = $(element).find('.datetime').text().trim();
+      
+      // 철강(Steel) 또는 반덤핑(Anti-dumping) 관련 뉴스 필터링
+      if (/steel|antidumping|countervailing|tariff/i.test(titleText)) {
+        alerts.push({
+          title: titleText,
+          country: 'USA',
+          category: 'Tariff & Regulation',
+          url: link,
+          date: dateText
+        });
+      }
+    });
+    
+    return alerts;
+  } catch (error) {
+    console.error('US DOC Tariff Scraper Failed:', error);
+    return [];
+  }
+}`,
     creatorName: '박민수 차장',
     creatorDept: '글로벌경제전략실 정책조사팀',
     creatorContact: 'ms.park@hyundaicorp.com / 사내 메신저: ms_trade',
@@ -175,35 +233,69 @@ Structure your trade brief beautifully:
       '인코텀즈 조건(예: FOB, CIF, CFR)과 결제 방식(L/C, T/T)을 세팅합니다.',
       '에이전트가 완벽히 포맷팅된 영문 오퍼 시트를 생성하면, "복사"하여 이메일 또는 견적 시스템에 붙여넣습니다.'
     ],
-    prompt: `[System Role & Identity]
-You are the Senior Mechanical Export & Estimation Specialist at Hyundai Corporation. Your task is to process incoming technical specs for machinery parts, map them to current vendor price databases, apply specified margin structures, and generate professional, binding English Offer Sheets.
+    prompt: `interface PartsCost {
+  partNumber: string;
+  baseCostUSD: number;
+  weightKg: number;
+  leadTimeWeeks: number;
+}
 
-[Guidelines for Offer Sheet Generation]
-1. Use standard international commercial terms (Incoterms 2020).
-2. Calculate pricing meticulously based on user-inputted parameters (Base cost, Markup %, Freight factor, Currency exchange rate).
-3. Draft a precise commercial offer including essential legal boilerplate:
-   - Validity of Offer (유효기간)
-   - Shipment Term (선적 예정일)
-   - Payment Terms (결제 조건)
-   - Origin (원산지) & Maker (제조사)
+interface QuotationConfig {
+  markupRate: number;      // 예: 0.15 (15%)
+  exchangeRate: number;    // 예: 1350.0 (USD/KRW)
+  shippingCostPerKg: number; // KG당 운송비 (USD)
+  incoterms: 'FOB' | 'CIF' | 'CFR';
+}
 
-[Draft Template Output]
-# COMMERCIAL OFFER (OFFER SHEET)
-**Ref No:** HD-EST-[YYYY]-[RANDOM_ID]
-**Date:** [Current Date]
----
-### 1. ITEM SPECIFICATIONS & PRICING TABLE
-(Include description, specification, unit, quantity, unit price, total amount in a beautiful markdown table)
+export function generateOfferSheet(
+  buyerName: string,
+  requestedSpecs: Array<{ partNumber: string; qty: number }>,
+  vendorDb: Record<string, PartsCost>,
+  config: QuotationConfig
+) {
+  let totalCostUSD = 0;
+  let totalWeightKg = 0;
+  const itemsList = [];
 
-### 2. GENERAL TERMS & CONDITIONS
-- **Price Term:** FOB Busan Port or CIF [Destination Port] (as selected)
-- **Payment:** 100% by Irrevocable L/C at sight / TT 30 days
-- **Delivery (Shipment):** Within 60 days after receipt of L/C
-- **Validity:** Valid for 15 days from the date of this offer
-- **Origin / Maker:** Republic of Korea / Hyundai-Approved Vendors
+  for (const req of requestedSpecs) {
+    const part = vendorDb[req.partNumber];
+    if (!part) continue;
 
-### 3. EXECUTIVE SUMMARY & SALES ARGUMENT
-Provide a short professional narrative why this technical spec fits the buyer's requirement perfectly.`,
+    const unitCostUSD = part.baseCostUSD;
+    const unitPriceUSD = unitCostUSD * (1 + config.markupRate);
+    const itemTotalUSD = unitPriceUSD * req.qty;
+
+    totalCostUSD += itemTotalUSD;
+    totalWeightKg += part.weightKg * req.qty;
+
+    itemsList.push({
+      partNumber: req.partNumber,
+      qty: req.qty,
+      unitPriceUSD,
+      totalUSD: itemTotalUSD,
+      leadTime: part.leadTimeWeeks
+    });
+  }
+
+  // CIF 혹은 CFR 조건일 경우 해상 운송비 가산
+  let shippingFreightUSD = 0;
+  if (config.incoterms === 'CIF' || config.incoterms === 'CFR') {
+    shippingFreightUSD = totalWeightKg * config.shippingCostPerKg;
+  }
+
+  const finalOfferAmountUSD = totalCostUSD + shippingFreightUSD;
+  const finalOfferAmountKRW = finalOfferAmountUSD * config.exchangeRate;
+
+  return {
+    buyer: buyerName,
+    items: itemsList,
+    totalWeightKg,
+    shippingFreightUSD,
+    grandTotalUSD: finalOfferAmountUSD,
+    grandTotalKRW: finalOfferAmountKRW,
+    terms: \`INCOTERMS 2020: \${config.incoterms}, Validity: 15 Days, Origin: South Korea\`
+  };
+}`,
     creatorName: '최진우 과장',
     creatorDept: '기계수출사업부 기계2팀',
     creatorContact: 'jw.choi@hyundaicorp.com / 사내 메신저: jw_machinery',
@@ -237,22 +329,51 @@ Provide a short professional narrative why this technical spec fits the buyer's 
       'AI가 최근 10년간의 가격 패턴 데이터베이스와 대조하여 예측 그래프 데이터와 밴드를 산출합니다.',
       '시나리오별 마진율 예측 테이블을 분석 자료에 활용하거나 메신저 보고용 브리핑 텍스트를 복사합니다.'
     ],
-    prompt: `[System Role & Identity]
-You are the Resource Commodity Price Predictor & Risk Quant for the Hyundai Energy & Minerals Trading Division. Your expertise lies in analyzing historical price behaviors (LME, Indonesian ESDM coal index - HBA) to project commercial trading margins.
-
-[Required Forecasting Logic]
-1. Input Variables: LME index base, Indonesian HBA baseline, local logistics surcharge, target sales margin.
-2. Formulate 3-Tier Forecast:
-   - Scenario A (Optimistic: 15% upward trend in steel/energy demand)
-   - Scenario B (Baseline: current market run-rate)
-   - Scenario C (Pessimistic: regulatory carbon caps or major port bottlenecks)
-3. Calculate Net Trading Margin (매출 - 원가 - 물류비 - 수수료) per metric ton.
-
-[Output Structure]
-### 📊 1. 글로벌 자원 가격지수 및 최신 공시 요약
-### 📈 2. 향후 4주간 가격 전망 밴드 (상한-기준-하한)
-### 💰 3. 시나리오별 예상 트레이딩 Net Margin 시뮬레이션 테이블
-### ⚠️ 4. 위험 요인(Risk Factors) 경고 & 바이어 비즈니스 협상 최적 시점 추천`,
+    prompt: `def calculate_coal_trading_margin(
+    hba_index: float,
+    base_purchase_price: float,
+    freight_rate_per_ton: float,
+    royalty_rate: float,
+    insurance_rate: float,
+    selling_price_per_ton: float
+) -> dict:
+    """
+    인도네시아 고시 광물가격(HBA) 기준 트레이딩 세후 마진 및 시뮬레이터
+    - HBA 인덱스 연동 정부 로열티(Royalty) 자동 반영
+    """
+    # 1. 정부 로열티 계산 (HBA 기준 가액에 연동되는 비율 적용)
+    calculated_royalty = hba_index * royalty_rate
+    
+    # 2. 총 원가 산출 (광산 매입 단가 + 정부 로열티 + 운임 + 보험료)
+    total_cost = base_purchase_price + calculated_royalty + freight_rate_per_ton + insurance_rate
+    
+    # 3. 톤당 마진 및 마진율 산출
+    net_margin_per_ton = selling_price_per_ton - total_cost
+    margin_percentage = (net_margin_per_ton / selling_price_per_ton) * 100
+    
+    # 4. 상/하방 가격 시나리오별 민감도 분석
+    scenarios = {
+        "Optimistic (+10% Price)": {
+            "net_margin": net_margin_per_ton + (selling_price_per_ton * 0.10),
+            "margin_pct": ((net_margin_per_ton + (selling_price_per_ton * 0.10)) / (selling_price_per_ton * 1.10)) * 100
+        },
+        "Baseline": {
+            "net_margin": net_margin_per_ton,
+            "margin_pct": margin_percentage
+        },
+        "Pessimistic (-10% Price)": {
+            "net_margin": net_margin_per_ton - (selling_price_per_ton * 0.10),
+            "margin_pct": ((net_margin_per_ton - (selling_price_per_ton * 0.10)) / (selling_price_per_ton * 0.90)) * 100
+        }
+    }
+    
+    return {
+        "calculated_royalty_per_ton": round(calculated_royalty, 2),
+        "total_cost_per_ton": round(total_cost, 2),
+        "net_margin_per_ton": round(net_margin_per_ton, 2),
+        "margin_percentage": round(margin_percentage, 2),
+        "scenarios": scenarios
+    }`,
     creatorName: '정소민 대리',
     creatorDept: '에너지자원개발본부 자원영업팀',
     creatorContact: 'sm.jung@hyundaicorp.com / 사내 메신저: sm_coal',
@@ -286,25 +407,38 @@ You are the Resource Commodity Price Predictor & Risk Quant for the Hyundai Ener
       '대응책(전액 환불 / 부분 보상 / 대체재 신속 발송 / 법적 대응 등)의 수위를 설정합니다.',
       '선택한 언어별(영어, 일본어, 중국어, 아랍어 등)로 자동 완성된 정중한 이메일 초안을 복사하여 즉시 활용합니다.'
     ],
-    prompt: `[System Role & Identity]
-You are the Elite International Trade Communications & Diplomacy Advisor at Hyundai Corporation Group. Your specialty is handling critical client claims, mitigating commercial disputes, and drafting emotionally intelligent, firm, and highly professional multi-lingual response emails.
+    prompt: `const { GoogleGenAI } = require("@google/genai");
 
-[Communication Rules per Culture]
-1. US/European: Direct, focused on solution timeline, acknowledgment of error with clear action plan, professional and objective.
-2. Japanese: Highly apologetic (extreme politeness, Sonkeigo/Kenjougo concepts in translation), emphasizes relationship and joint investigation, polite but clear limits on compensation.
-3. Middle Eastern: Relies on business friendship and mutual respect, softer tone, emphasizes trust and long-term partnership first, followed by technical resolution.
+async function generateResponseEmail(complainText, culture, remedyType) {
+  /**
+   * 바이어 컴플레인 해결 및 정중한 대응 메일 생성 엔진
+   * - Google GenAI (Gemini 3.5 Flash) 및 다국어 비즈니스 프로토콜 활용
+   */
+  const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+  
+  const systemPrompt = \`
+  당신은 현대코퍼레이션의 베테랑 국제 무역 분쟁 전문 영업 컨설턴트입니다.
+  다음 격앙된 바이어의 클레임 메일에 적합한 정중하고 외교적인 톤의 답장을 작성하십시오.
+  
+  [바이어 불만 이메일]
+  "\${complainText}"
+  
+  [문화권 조건]
+  - \${culture} (예: 미국식-직설적/신속대응, 일본식-극진히 정중하며 관계중심, 중동식-상호신뢰 강조)
+  
+  [제안하는 보상 옵션]
+  - \${remedyType} (대체 품목 신속 발송 / 다음 주문 시 파격 할인 제공 / 부분 환불 등)
+  
+  비즈니스 예절을 준수하여 최고의 이메일 초안을 생성하십시오.
+  \`;
 
-[Input Information required from User]
-- Raw complain email text
-- Responsible Party (Our Fault vs Carrier Fault vs Shared)
-- Desired Remedy (Replacement, discount next order, full refund, investigation)
+  const response = await ai.models.generateContent({
+    model: "gemini-3.5-flash",
+    contents: systemPrompt,
+  });
 
-[Output Format]
-Provide:
-- **바이어 감정 분석 및 3대 핵심 쟁점 진단**
-- **Draft Version 1 (Soft & Relational) [선택한 언어]**
-- **Draft Version 2 (Solution-Focused & Objective) [선택한 언어]**
-- **이메일 발송 전 반드시 점검해야 할 계약서상 면책 주의점 (Disclaimer Tip)**`,
+  return response.text;
+}`,
     creatorName: '강태오 대리',
     creatorDept: '해외영업지원팀 중남미파트',
     creatorContact: 'to.kang@hyundaicorp.com / 사내 메신저: to_latin',
