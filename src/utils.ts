@@ -1,0 +1,1 @@
+export const getDeviceId = () => { let id = localStorage.getItem("DEVICE_ID"); if (!id) { id = "device-" + Math.random().toString(36).substr(2, 9); localStorage.setItem("DEVICE_ID", id); } return id; }

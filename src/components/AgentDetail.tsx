@@ -5,6 +5,7 @@ import {
   Play, Calendar, Contact, AlertCircle, Sparkles, Trophy, Shield, Terminal, Code
 } from 'lucide-react';
 import { CATEGORY_LABELS, CATEGORY_COLORS, REACTION_EMOJIS } from '../data/mockData';
+import { getDeviceId } from '../utils';
 
 interface AgentDetailProps {
   agent: Agent;
@@ -419,13 +420,13 @@ export default function AgentDetail({
                   <button
                     onClick={() => onLike(agent.id)}
                     className={`flex items-center space-x-2 px-5 py-2.5 rounded-xl text-xs font-bold border transition-all ${
-                      currentUser && agent.likedBy.includes(currentUser.employeeId)
+                      agent.likedBy.includes(getDeviceId())
                         ? 'bg-rose-50 border-rose-200 text-rose-600 scale-105 shadow-sm'
                         : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-100 shadow-sm'
                     }`}
                     id="btn-detail-like"
                   >
-                    <ThumbsUp className={`h-3.5 w-3.5 ${currentUser && agent.likedBy.includes(currentUser.employeeId) ? 'fill-rose-500 text-rose-600' : ''}`} />
+                    <ThumbsUp className={`h-3.5 w-3.5 ${agent.likedBy.includes(getDeviceId()) ? 'fill-rose-500 text-rose-600' : ''}`} />
                     <span>도움돼요 ({agent.likes})</span>
                   </button>
                 </div>

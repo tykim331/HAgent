@@ -7,8 +7,9 @@ import AgentDetail from './components/AgentDetail';
 import AgentForm from './components/AgentForm';
 import MyPage from './components/MyPage';
 import AuthModal from './components/AuthModal';
+import { getDeviceId } from './utils';
 import { 
-  Search, SlidersHorizontal, ArrowUpDown, ChevronDown, Sparkles, Plus, AlertCircle 
+  Search, SlidersHorizontal, ArrowUpDown, ChevronDown, Sparkles, Plus, AlertCircle
 } from 'lucide-react';
 
 export default function App() {
@@ -74,19 +75,16 @@ export default function App() {
   };
 
   const handleLike = (agentId: string) => {
-    if (!currentUser) {
-      setShowLoginModal(true);
-      return;
-    }
+    const deviceId = getDeviceId();
 
     setAgents(prev => {
       const updated = prev.map(a => {
         if (a.id !== agentId) return a;
         
-        const isLiked = a.likedBy.includes(currentUser.employeeId);
+        const isLiked = a.likedBy.includes(deviceId);
         const likedBy = isLiked
-          ? a.likedBy.filter(id => id !== currentUser.employeeId)
-          : [...a.likedBy, currentUser.employeeId];
+          ? a.likedBy.filter(id => id !== deviceId)
+          : [...a.likedBy, deviceId];
         
         return {
           ...a,
