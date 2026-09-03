@@ -16,6 +16,8 @@ interface AgentDetailProps {
   onReact: (agentId: string, emoji: string) => void;
   onAddComment: (agentId: string, content: string) => void;
   onUpdateBadge: (agentId: string, badge: Agent['badge']) => void;
+  onEdit?: () => void;
+  onDelete?: () => void;
 }
 
 // Simple Markdown-to-HTML parser for beautiful, clean formatting of prompts and outputs
@@ -137,25 +139,36 @@ export default function AgentDetail({
   onLike,
   onReact,
   onAddComment,
-  onUpdateBadge
+  onUpdateBadge,
+  onEdit,
+  onDelete
 }: AgentDetailProps) {
   const [activeTab, setActiveTab] = useState<'overview' | 'demo'>('overview');
   const [copied, setCopied] = useState(false);
   const [commentText, setCommentText] = useState('');
   
+  // Password Modal State
+  const [passwordModalConfig, setPasswordModalConfig] = useState<{ isOpen: boolean, action: 'edit' | 'delete' | null }>({ isOpen: false, action: null });
+  const [inputPassword, setInputPassword] = useState('');
+  const [passwordError, setPasswordError] = useState('');
+
+  const handleActionClick = (action: 'edit' | 'delete') => {
+    setPasswordModalConfig({ isOpen: true, action });
+    setInputPassword('');
+    setPasswordError('');
+  };
+  
   const [activeImageIndex, setActiveImageIndex] = useState(0);
-  const mockImages = [
-    "https://picsum.photos/id/20/800/450",
-    "https://picsum.photos/id/42/800/450",
-    "https://picsum.photos/id/48/800/450",
-    "https://picsum.photos/id/60/800/450"
-  ];
+  
+  const displayImages = agent.screenUrls && agent.screenUrls.length > 0 
+    ? agent.screenUrls 
+    : (agent.thumbnailUrl ? [agent.thumbnailUrl] : ["https://picsum.photos/id/20/800/450"]);
 
   const handlePrevImage = () => {
-    setActiveImageIndex((prev) => (prev > 0 ? prev - 1 : mockImages.length - 1));
+    setActiveImageIndex((prev) => (prev > 0 ? prev - 1 : displayImages.length - 1));
   };
   const handleNextImage = () => {
-    setActiveImageIndex((prev) => (prev < mockImages.length - 1 ? prev + 1 : 0));
+    setActiveImageIndex((prev) => (prev < displayImages.length - 1 ? prev + 1 : 0));
   };
   
   // Playground States
@@ -274,14 +287,91 @@ export default function AgentDetail({
             </p>
           </div>
           
-          <button 
-            onClick={onClose}
-            className="text-slate-300 hover:text-white p-1.5 rounded-lg hover:bg-white/10 transition-colors"
-            id="detail-close-btn"
-          >
-            <X className="h-6 w-6" />
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => handleActionClick('edit')}
+              className="text-slate-300 hover:text-white text-xs px-2 py-1 rounded hover:bg-white/10 transition-colors border border-slate-500/50 hover:border-white"
+            >
+              수정
+            </button>
+            <button
+              onClick={() => handleActionClick('delete')}
+              className="text-slate-300 hover:text-rose-400 text-xs px-2 py-1 rounded hover:bg-white/10 transition-colors border border-slate-500/50 hover:border-rose-400"
+            >
+              삭제
+            </button>
+            <div className="h-4 w-px bg-white/20 mx-1"></div>
+            <button 
+              onClick={onClose}
+              className="text-slate-300 hover:text-white p-1.5 rounded-lg hover:bg-white/10 transition-colors"
+              id="detail-close-btn"
+            >
+              <X className="h-6 w-6" />
+            </button>
+          </div>
         </div>
+
+        {/* Password Confirmation Modal */}
+        {passwordModalConfig.isOpen && (
+          <div className="absolute inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+            <div className="bg-white rounded-xl shadow-xl w-full max-w-sm p-6 space-y-4">
+              <h3 className="text-lg font-bold text-slate-900">
+                {passwordModalConfig.action === 'edit' ? '에이전트 수정' : '에이전트 삭제'}
+              </h3>
+              
+              {agent.password ? (
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-slate-700">비밀번호 (4자리 숫자)</label>
+                  <input
+                    type="password"
+                    maxLength={4}
+                    value={inputPassword}
+                    onChange={(e) => {
+                      setInputPassword(e.target.value.replace(/\D/g, ''));
+                      setPasswordError('');
+                    }}
+                    className="w-full text-sm p-2 border border-slate-300 rounded focus:outline-none focus:ring-2 focus:ring-hyundai-blue"
+                    placeholder="비밀번호 입력"
+                    autoFocus
+                  />
+                  {passwordError && <p className="text-xs text-rose-500 font-bold">{passwordError}</p>}
+                </div>
+              ) : (
+                <p className="text-sm text-slate-600">
+                  이 에이전트는 등록된 비밀번호가 없습니다. 정말로 {passwordModalConfig.action === 'edit' ? '수정' : '삭제'}하시겠습니까?
+                </p>
+              )}
+
+              <div className="flex justify-end gap-2 pt-2">
+                <button
+                  onClick={() => setPasswordModalConfig({ isOpen: false, action: null })}
+                  className="px-4 py-2 text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors"
+                >
+                  취소
+                </button>
+                <button
+                  onClick={() => {
+                    if (agent.password && agent.password !== inputPassword) {
+                      setPasswordError('비밀번호가 일치하지 않습니다.');
+                      return;
+                    }
+                    if (passwordModalConfig.action === 'edit' && onEdit) {
+                      onEdit();
+                    } else if (passwordModalConfig.action === 'delete' && onDelete) {
+                      onDelete();
+                    }
+                    setPasswordModalConfig({ isOpen: false, action: null });
+                  }}
+                  className={`px-4 py-2 text-xs font-bold text-white rounded-lg transition-colors ${
+                    passwordModalConfig.action === 'delete' ? 'bg-rose-500 hover:bg-rose-600' : 'bg-hyundai-blue hover:bg-blue-700'
+                  }`}
+                >
+                  확인
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Tab Selection */}
         <div className="bg-slate-50 border-b border-slate-200 flex w-full text-base" id="detail-tabs">
@@ -390,18 +480,22 @@ export default function AgentDetail({
               <div className="space-y-4 pt-6 border-t border-slate-100">
                 <h4 className="text-sm font-bold text-slate-900">💻 Agent 화면</h4>
                 <div className="relative bg-slate-900 rounded-xl overflow-hidden aspect-video flex items-center justify-center border border-slate-800 group">
-                  <img src={mockImages[activeImageIndex]} alt="Agent Screen" className="w-full h-full object-cover opacity-90 transition-opacity" />
+                  <img src={displayImages[activeImageIndex]} alt="Agent Screen" className="w-full h-full object-cover opacity-90 transition-opacity" />
                   
                   {/* Prev/Next buttons */}
-                  <button onClick={handlePrevImage} className="absolute left-4 p-2 rounded-full bg-black/50 text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/80">
-                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
-                  </button>
-                  <button onClick={handleNextImage} className="absolute right-4 p-2 rounded-full bg-black/50 text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/80">
-                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
-                  </button>
+                  {displayImages.length > 1 && (
+                    <>
+                      <button onClick={handlePrevImage} className="absolute left-4 p-2 rounded-full bg-black/50 text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/80">
+                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+                      </button>
+                      <button onClick={handleNextImage} className="absolute right-4 p-2 rounded-full bg-black/50 text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/80">
+                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+                      </button>
+                    </>
+                  )}
 
                   <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex space-x-2">
-                    {mockImages.map((_, idx) => (
+                    {displayImages.map((_, idx) => (
                       <button key={idx} onClick={() => setActiveImageIndex(idx)} className={`w-2 h-2 rounded-full transition-colors ${idx === activeImageIndex ? 'bg-white' : 'bg-white/40'}`} />
                     ))}
                   </div>

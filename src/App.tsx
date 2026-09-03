@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Agent, Comment, User, CategoryType } from './types';
-import { INITIAL_AGENTS, INITIAL_COMMENTS, CATEGORY_LABELS } from './data/mockData';
+import { INITIAL_COMMENTS, CATEGORY_LABELS } from './data/mockData';
 import Header from './components/Header';
 import AgentCard from './components/AgentCard';
 import AgentDetail from './components/AgentDetail';
@@ -8,6 +8,7 @@ import AgentForm from './components/AgentForm';
 import MyPage from './components/MyPage';
 import AuthModal from './components/AuthModal';
 import { getDeviceId } from './utils';
+import { supabase } from './lib/supabase';
 import { 
   Search, SlidersHorizontal, ArrowUpDown, ChevronDown, Sparkles, Plus, AlertCircle
 } from 'lucide-react';
@@ -28,27 +29,28 @@ export default function App() {
   const [selectedCategory, setSelectedCategory] = useState<'all' | CategoryType>('all');
   const [sortBy, setSortBy] = useState<'likes' | 'views' | 'newest'>('likes');
 
-  // --- Initialize State from LocalStorage or Fallback ---
+  // --- Initialize State from Supabase ---
   useEffect(() => {
-    const savedAgents = localStorage.getItem('H_AGENTS');
+    const fetchAgents = async () => {
+      const { data, error } = await supabase.from('agents').select('*').order('createdAt', { ascending: false });
+      if (error) {
+        console.error('Error fetching agents:', error);
+      } else if (data) {
+        setAgents(data as Agent[]);
+      }
+    };
+    
+    fetchAgents();
+
+    const subscription = supabase
+      .channel('agents-channel')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'agents' }, (payload) => {
+        fetchAgents();
+      })
+      .subscribe();
+
     const savedComments = localStorage.getItem('H_COMMENTS');
     const savedUser = localStorage.getItem('H_USER');
-
-    if (savedAgents) {
-      const parsedAgents = JSON.parse(savedAgents);
-      const updatedAgents = parsedAgents.map((agent: Agent) => {
-        const initial = INITIAL_AGENTS.find(a => a.id === agent.id);
-        if (initial) {
-          return { ...agent, category: initial.category, creatorName: initial.creatorName };
-        }
-        return agent;
-      });
-      setAgents(updatedAgents);
-      localStorage.setItem('H_AGENTS', JSON.stringify(updatedAgents));
-    } else {
-      setAgents(INITIAL_AGENTS);
-      localStorage.setItem('H_AGENTS', JSON.stringify(INITIAL_AGENTS));
-    }
 
     if (savedComments) {
       setComments(JSON.parse(savedComments));
@@ -60,74 +62,64 @@ export default function App() {
     if (savedUser) {
       setCurrentUser(JSON.parse(savedUser));
     }
+
+    return () => {
+      supabase.removeChannel(subscription);
+    };
   }, []);
 
   // --- Handlers ---
-  const handleSelectAgent = (agentId: string) => {
+  const handleSelectAgent = async (agentId: string) => {
     setSelectedAgentId(agentId);
     
     // Increment view count
-    setAgents(prev => {
-      const updated = prev.map(a => a.id === agentId ? { ...a, views: a.views + 1 } : a);
-      localStorage.setItem('H_AGENTS', JSON.stringify(updated));
-      return updated;
-    });
+    const agent = agents.find(a => a.id === agentId);
+    if (agent) {
+      setAgents(prev => prev.map(a => a.id === agentId ? { ...a, views: a.views + 1 } : a));
+      await supabase.from('agents').update({ views: agent.views + 1 }).eq('id', agentId);
+    }
   };
 
-  const handleLike = (agentId: string) => {
+  const handleLike = async (agentId: string) => {
     const deviceId = getDeviceId();
+    const agent = agents.find(a => a.id === agentId);
+    if (!agent) return;
 
-    setAgents(prev => {
-      const updated = prev.map(a => {
-        if (a.id !== agentId) return a;
-        
-        const isLiked = a.likedBy.includes(deviceId);
-        const likedBy = isLiked
-          ? a.likedBy.filter(id => id !== deviceId)
-          : [...a.likedBy, deviceId];
-        
-        return {
-          ...a,
-          likes: isLiked ? a.likes - 1 : a.likes + 1,
-          likedBy
-        };
-      });
-      localStorage.setItem('H_AGENTS', JSON.stringify(updated));
-      return updated;
-    });
+    const isLiked = agent.likedBy.includes(deviceId);
+    const likedBy = isLiked
+      ? agent.likedBy.filter(id => id !== deviceId)
+      : [...agent.likedBy, deviceId];
+    
+    const newLikes = isLiked ? agent.likes - 1 : agent.likes + 1;
+
+    setAgents(prev => prev.map(a => a.id === agentId ? { ...a, likes: newLikes, likedBy } : a));
+    await supabase.from('agents').update({ likes: newLikes, likedBy }).eq('id', agentId);
   };
 
-  const handleReact = (agentId: string, emoji: string) => {
+  const handleReact = async (agentId: string, emoji: string) => {
     if (!currentUser) {
       setShowLoginModal(true);
       return;
     }
 
-    setAgents(prev => {
-      const updated = prev.map(a => {
-        if (a.id !== agentId) return a;
+    const agent = agents.find(a => a.id === agentId);
+    if (!agent) return;
 
-        const currentReactions = { ...a.emojiReactions };
-        const userList = currentReactions[emoji] || [];
-        
-        const hasReacted = userList.includes(currentUser.employeeId);
-        const updatedUserList = hasReacted
-          ? userList.filter(id => id !== currentUser.employeeId)
-          : [...userList, currentUser.employeeId];
+    const currentReactions = { ...agent.emojiReactions };
+    const userList = currentReactions[emoji] || [];
+    
+    const hasReacted = userList.includes(currentUser.employeeId);
+    const updatedUserList = hasReacted
+      ? userList.filter(id => id !== currentUser.employeeId)
+      : [...userList, currentUser.employeeId];
 
-        currentReactions[emoji] = updatedUserList;
+    currentReactions[emoji] = updatedUserList;
 
-        return {
-          ...a,
-          emojiReactions: currentReactions
-        };
-      });
-      localStorage.setItem('H_AGENTS', JSON.stringify(updated));
-      return updated;
-    });
+    setAgents(prev => prev.map(a => a.id === agentId ? { ...a, emojiReactions: currentReactions } : a));
+    await supabase.from('agents').update({ emojiReactions: currentReactions }).eq('id', agentId);
   };
 
-  const handleAddComment = (agentId: string, content: string) => {
+  const handleAddComment = async (agentId: string, content: string) => {
     if (!currentUser) return;
 
     const newComment: Comment = {
@@ -147,24 +139,18 @@ export default function App() {
     });
   };
 
-  const handleUpdateBadge = (agentId: string, badge: Agent['badge']) => {
+  const handleUpdateBadge = async (agentId: string, badge: Agent['badge']) => {
     if (currentUser?.role !== 'admin') return;
 
-    setAgents(prev => {
-      const updated = prev.map(a => a.id === agentId ? { ...a, badge } : a);
-      localStorage.setItem('H_AGENTS', JSON.stringify(updated));
-      return updated;
-    });
+    setAgents(prev => prev.map(a => a.id === agentId ? { ...a, badge } : a));
+    await supabase.from('agents').update({ badge }).eq('id', agentId);
   };
 
-  const handleSubmitAgent = (agentData: Partial<Agent>) => {
+  const handleSubmitAgent = async (agentData: Partial<Agent>) => {
     if (editingAgent) {
       // Edit mode
-      setAgents(prev => {
-        const updated = prev.map(a => a.id === editingAgent.id ? { ...a, ...agentData } as Agent : a);
-        localStorage.setItem('H_AGENTS', JSON.stringify(updated));
-        return updated;
-      });
+      setAgents(prev => prev.map(a => a.id === editingAgent.id ? { ...a, ...agentData } as Agent : a));
+      await supabase.from('agents').update(agentData).eq('id', editingAgent.id);
       setEditingAgent(null);
     } else {
       // Register mode
@@ -194,11 +180,8 @@ export default function App() {
         }
       };
 
-      setAgents(prev => {
-        const updated = [newAgent, ...prev];
-        localStorage.setItem('H_AGENTS', JSON.stringify(updated));
-        return updated;
-      });
+      setAgents(prev => [newAgent, ...prev]);
+      await supabase.from('agents').insert([newAgent]);
     }
 
     setActiveTab('gallery');
@@ -209,15 +192,13 @@ export default function App() {
     setActiveTab('register');
   };
 
-  const handleDeleteAgent = (agentId: string) => {
+  const handleDeleteAgent = async (agentId: string) => {
     const isConfirmed = window.confirm("이 AI 에이전트를 공유 허브에서 정말로 제거하시겠습니까?");
     if (!isConfirmed) return;
 
-    setAgents(prev => {
-      const updated = prev.filter(a => a.id !== agentId);
-      localStorage.setItem('H_AGENTS', JSON.stringify(updated));
-      return updated;
-    });
+    setAgents(prev => prev.filter(a => a.id !== agentId));
+    await supabase.from('agents').delete().eq('id', agentId);
+
     setComments(prev => {
       const updated = prev.filter(c => c.agentId !== agentId);
       localStorage.setItem('H_COMMENTS', JSON.stringify(updated));
@@ -459,6 +440,8 @@ export default function App() {
           onReact={handleReact}
           onAddComment={handleAddComment}
           onUpdateBadge={handleUpdateBadge}
+          onEdit={() => { handleEditAgent(currentDetailedAgent); setSelectedAgentId(null); }}
+          onDelete={() => { handleDeleteAgent(currentDetailedAgent.id); setSelectedAgentId(null); }}
         />
       )}
 

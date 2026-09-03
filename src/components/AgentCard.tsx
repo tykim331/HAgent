@@ -78,7 +78,7 @@ export default function AgentCard({ agent, onSelect }: AgentCardProps) {
             </div>
             <div>
               <p className="text-xs font-bold text-slate-800 leading-none">
-                {agent.creatorName}
+                {agent.creatorName}{agent.creatorRank ? ` ${agent.creatorRank}` : ''}
               </p>
               <p className="text-[10px] text-slate-500 mt-0.5 leading-none font-medium">
                 {agent.creatorDept.split(' ')[0]}

@@ -4,6 +4,7 @@ import {
   X, Plus, Trash2, HelpCircle, Save, Info, Sparkles, Terminal, BookOpen, AlertCircle, Code 
 } from 'lucide-react';
 import { CATEGORY_LABELS } from '../data/mockData';
+import { supabase } from '../lib/supabase';
 
 interface AgentFormProps {
   currentUser: User | null;
@@ -11,6 +12,7 @@ interface AgentFormProps {
   onCancel: () => void;
   editingAgent?: Agent | null;
 }
+
 
 // Curated stock illustrations for professional corporate thumbnail selections
 const THUMBNAIL_PRESETS = [
@@ -99,28 +101,68 @@ export default function AgentForm({
     setSteps(updated);
   };
 
-  const handleThumbnailUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const uploadFileToSupabase = async (file: File): Promise<string> => {
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
+    const filePath = `${fileName}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from('agent-images')
+      .upload(filePath, file);
+
+    if (uploadError) {
+      console.error('Error uploading file:', uploadError);
+      throw uploadError;
+    }
+
+    const { data } = supabase.storage.from('agent-images').getPublicUrl(filePath);
+    return data.publicUrl;
+  };
+
+  const [isUploading, setIsUploading] = useState(false);
+
+  const handleThumbnailUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => setThumbnailUrl(reader.result as string);
-      reader.readAsDataURL(file);
+      const localUrl = URL.createObjectURL(file);
+      setThumbnailUrl(localUrl);
+      setIsUploading(true);
+      try {
+        const publicUrl = await uploadFileToSupabase(file);
+        setThumbnailUrl(publicUrl);
+        URL.revokeObjectURL(localUrl);
+      } catch (err: any) {
+        alert(`썸네일 업로드에 실패했습니다. (${err.message || err})`);
+        setThumbnailUrl('');
+      } finally {
+        setIsUploading(false);
+      }
     }
   };
 
-  const handleScreenUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleScreenUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (files && files.length > 0) {
-      const readers = Array.from(files).map((file: any) => {
-        return new Promise<string>((resolve) => {
-          const reader = new FileReader();
-          reader.onloadend = () => resolve(reader.result as string);
-          reader.readAsDataURL(file);
+      const newLocalUrls = Array.from(files).map(file => URL.createObjectURL(file));
+      setScreenUrls(prev => [...prev, ...newLocalUrls]);
+      
+      setIsUploading(true);
+      try {
+        const uploadPromises = Array.from(files).map(file => uploadFileToSupabase(file));
+        const urls = await Promise.all(uploadPromises);
+        
+        setScreenUrls(prev => {
+          const withoutLocals = prev.filter(url => !newLocalUrls.includes(url));
+          return [...withoutLocals, ...urls];
         });
-      });
-      Promise.all(readers).then(urls => {
-        setScreenUrls(prev => [...prev, ...urls]);
-      });
+        
+        newLocalUrls.forEach(url => URL.revokeObjectURL(url));
+      } catch (err: any) {
+        alert(`화면 이미지 업로드에 실패했습니다. (${err.message || err})`);
+        setScreenUrls(prev => prev.filter(url => !newLocalUrls.includes(url)));
+      } finally {
+        setIsUploading(false);
+      }
     }
   };
 
@@ -275,33 +317,59 @@ export default function AgentForm({
             {/* Thumbnail Upload */}
             <div className="space-y-2">
               <label className="text-xs font-bold text-slate-700 block">매칭 대표 이미지 (썸네일, 1개)</label>
-              <input 
-                type="file" 
-                accept="image/*" 
-                onChange={handleThumbnailUpload} 
-                className="w-full text-xs p-2 border border-slate-300 rounded bg-white"
-              />
+              <div className="flex items-center gap-3">
+                <label className="cursor-pointer inline-flex items-center justify-center px-4 py-2 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded-lg text-xs font-bold text-slate-700 transition-colors">
+                  <Plus className="h-4 w-4 mr-1" />
+                  사진 선택
+                  <input 
+                    type="file" 
+                    accept="image/*" 
+                    onChange={handleThumbnailUpload} 
+                    className="hidden"
+                  />
+                </label>
+                {isUploading && !thumbnailUrl && <span className="text-xs text-slate-500 animate-pulse">업로드 중...</span>}
+              </div>
               {thumbnailUrl && (
-                <div className="relative rounded-lg overflow-hidden h-24 border border-slate-200 mt-2">
+                <div className="relative rounded-lg overflow-hidden h-32 w-48 border border-slate-200 mt-3 group">
                   <img src={thumbnailUrl} alt="Thumbnail preview" className="w-full h-full object-cover" />
+                  <button 
+                    type="button" 
+                    onClick={() => setThumbnailUrl('')}
+                    className="absolute top-2 right-2 bg-rose-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity shadow-sm"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                  {isUploading && thumbnailUrl.startsWith('blob:') && (
+                    <div className="absolute inset-0 bg-white/50 flex items-center justify-center backdrop-blur-[1px]">
+                      <span className="text-xs font-bold text-slate-800 bg-white/80 px-2 py-1 rounded">업로드 중...</span>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
 
             {/* Screen Uploads */}
-            <div className="space-y-2">
+            <div className="space-y-2 mt-6">
               <label className="text-xs font-bold text-slate-700 block">Agent 화면 (다중 선택 가능)</label>
-              <input 
-                type="file" 
-                accept="image/*" 
-                multiple 
-                onChange={handleScreenUpload} 
-                className="w-full text-xs p-2 border border-slate-300 rounded bg-white"
-              />
+              <div className="flex items-center gap-3">
+                 <label className="cursor-pointer inline-flex items-center justify-center px-4 py-2 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded-lg text-xs font-bold text-slate-700 transition-colors">
+                   <Plus className="h-4 w-4 mr-1" />
+                   사진 추가
+                   <input 
+                     type="file" 
+                     accept="image/*" 
+                     multiple 
+                     onChange={handleScreenUpload} 
+                     className="hidden"
+                   />
+                 </label>
+              </div>
+
               {screenUrls.length > 0 && (
-                <div className="grid grid-cols-3 gap-2 mt-2">
+                <div className="grid grid-cols-3 gap-2 mt-3">
                   {screenUrls.map((url, idx) => (
-                    <div key={idx} className="relative rounded-lg overflow-hidden h-20 border border-slate-200 group">
+                    <div key={idx} className="relative rounded-lg overflow-hidden h-24 border border-slate-200 group">
                       <img src={url} alt={`Screen ${idx}`} className="w-full h-full object-cover" />
                       <button 
                         type="button" 
@@ -310,6 +378,11 @@ export default function AgentForm({
                       >
                         <X className="h-3 w-3" />
                       </button>
+                      {url.startsWith('blob:') && (
+                        <div className="absolute inset-0 bg-white/50 flex items-center justify-center backdrop-blur-[1px]">
+                          <span className="text-[10px] font-bold text-slate-800 bg-white/80 px-1.5 py-0.5 rounded">업로드 중</span>
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -445,11 +518,12 @@ export default function AgentForm({
           </button>
           <button
             type="submit"
-            className="px-6 py-2.5 rounded-lg bg-hyundai-blue hover:bg-hyundai-blue/90 text-white text-xs font-bold flex items-center space-x-2 transition-all shadow-md"
+            disabled={isUploading}
+            className={`px-6 py-2.5 rounded-lg text-white text-xs font-bold flex items-center space-x-2 transition-all shadow-md ${isUploading ? 'bg-slate-400 cursor-not-allowed' : 'bg-hyundai-blue hover:bg-hyundai-blue/90'}`}
             id="btn-form-submit"
           >
             <Save className="h-4 w-4" />
-            <span>{editingAgent ? '수정 완료 및 업로드' : '에이전트 허브에 공유하기'}</span>
+            <span>{isUploading ? '업로드 중...' : (editingAgent ? '수정 완료 및 업로드' : '에이전트 허브에 공유하기')}</span>
           </button>
         </div>
       </form>

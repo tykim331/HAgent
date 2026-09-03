@@ -34,7 +34,7 @@ export default function Header({
               <h1 className="text-lg font-black tracking-tight flex items-center gap-1.5">
                 현대코퍼레이션그룹 AI Agent 학습 플랫폼
               </h1>
-              <p className="text-[10px] text-slate-300 hidden sm:block font-medium tracking-wide">AI 학습 가이드부터 직접 만든 AI Agent들을 한눈에 만나는 배우고, 만들고, 공유하는 공간</p>
+              <p className="text-[10px] text-slate-300 hidden sm:block font-medium tracking-wide">AI 학습 가이드부터 직접 만든 AI Agent들을 한눈에 볼 수 있는 AI를 배우고, 만들고, 공유하는 공간</p>
             </div>
           </div>
 
