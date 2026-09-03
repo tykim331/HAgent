@@ -29,7 +29,7 @@ export default function AgentForm({
   editingAgent
 }: AgentFormProps) {
   const [name, setName] = useState('');
-  const [category, setCategory] = useState<CategoryType>('report');
+  const [category, setCategory] = useState<CategoryType>('data_collection');
   const [shortDesc, setShortDesc] = useState('');
   const [painPoint, setPainPoint] = useState('');
   const [expectation, setExpectation] = useState('');

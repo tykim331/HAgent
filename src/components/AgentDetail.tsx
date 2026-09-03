@@ -138,9 +138,24 @@ export default function AgentDetail({
   onAddComment,
   onUpdateBadge
 }: AgentDetailProps) {
-  const [activeTab, setActiveTab] = useState<'overview' | 'features' | 'guide' | 'prompt'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'demo'>('overview');
   const [copied, setCopied] = useState(false);
   const [commentText, setCommentText] = useState('');
+  
+  const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const mockImages = [
+    "https://picsum.photos/id/20/800/450",
+    "https://picsum.photos/id/42/800/450",
+    "https://picsum.photos/id/48/800/450",
+    "https://picsum.photos/id/60/800/450"
+  ];
+
+  const handlePrevImage = () => {
+    setActiveImageIndex((prev) => (prev > 0 ? prev - 1 : mockImages.length - 1));
+  };
+  const handleNextImage = () => {
+    setActiveImageIndex((prev) => (prev < mockImages.length - 1 ? prev + 1 : 0));
+  };
   
   // Playground States
   const [sandboxInput, setSandboxInput] = useState('');
@@ -239,7 +254,7 @@ export default function AgentDetail({
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 animate-fade-in" id="agent-detail-backdrop">
       <div 
-        className="relative bg-white w-full max-w-4xl rounded-2xl shadow-2xl flex flex-col max-h-[92vh] overflow-hidden border border-slate-200"
+        className="relative bg-white w-full max-w-6xl rounded-2xl shadow-2xl flex flex-col h-[850px] max-h-[95vh] overflow-hidden border border-slate-200"
         id="agent-detail-modal"
       >
         {/* Modal Header */}
@@ -268,42 +283,24 @@ export default function AgentDetail({
         </div>
 
         {/* Tab Selection */}
-        <div className="bg-slate-50 border-b border-slate-200 flex overflow-x-auto text-xs" id="detail-tabs">
+        <div className="bg-slate-50 border-b border-slate-200 flex w-full text-base" id="detail-tabs">
           <button
             onClick={() => setActiveTab('overview')}
-            className={`px-5 py-3 font-bold border-b-2 whitespace-nowrap transition-colors flex items-center space-x-1.5 ${
+            className={`flex-1 justify-center py-4 font-bold border-b-2 whitespace-nowrap transition-colors flex items-center space-x-2 ${
               activeTab === 'overview' ? 'border-hyundai-blue text-hyundai-blue bg-white font-extrabold' : 'border-transparent text-slate-500 hover:text-slate-800'
             }`}
           >
-            <Contact className="h-4 w-4" />
-            <span>개요 & 기대효과</span>
+            <Contact className="h-5 w-5" />
+            <span>Agent 소개</span>
           </button>
           <button
-            onClick={() => setActiveTab('features')}
-            className={`px-5 py-3 font-bold border-b-2 whitespace-nowrap transition-colors flex items-center space-x-1.5 ${
-              activeTab === 'features' ? 'border-hyundai-blue text-hyundai-blue bg-white font-extrabold' : 'border-transparent text-slate-500 hover:text-slate-800'
+            onClick={() => setActiveTab('demo')}
+            className={`flex-1 justify-center py-4 font-bold border-b-2 whitespace-nowrap transition-colors flex items-center space-x-2 ${
+              activeTab === 'demo' ? 'border-hyundai-blue text-hyundai-blue bg-white font-extrabold' : 'border-transparent text-slate-500 hover:text-slate-800'
             }`}
           >
-            <Sparkles className="h-4 w-4" />
-            <span>주요 기능</span>
-          </button>
-          <button
-            onClick={() => setActiveTab('guide')}
-            className={`px-5 py-3 font-bold border-b-2 whitespace-nowrap transition-colors flex items-center space-x-1.5 ${
-              activeTab === 'guide' ? 'border-hyundai-blue text-hyundai-blue bg-white font-extrabold' : 'border-transparent text-slate-500 hover:text-slate-800'
-            }`}
-          >
-            <Award className="h-4 w-4" />
-            <span>사용 방법</span>
-          </button>
-          <button
-            onClick={() => setActiveTab('prompt')}
-            className={`px-5 py-3 font-bold border-b-2 whitespace-nowrap transition-colors flex items-center space-x-1.5 ${
-              activeTab === 'prompt' ? 'border-hyundai-blue text-hyundai-blue bg-white font-extrabold' : 'border-transparent text-slate-500 hover:text-slate-800'
-            }`}
-          >
-            <Code className="h-4 w-4" />
-            <span>코드 공유</span>
+            <Play className="h-5 w-5" />
+            <span>Agent 시연 영상</span>
           </button>
         </div>
 
@@ -338,7 +335,7 @@ export default function AgentDetail({
                 <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-4 h-fit">
                   <h4 className="text-sm font-bold text-slate-900 border-b border-slate-200 pb-2 flex items-center gap-2">
                     <Contact className="h-4 w-4 text-hyundai-blue" />
-                    <span>제작자 및 피드백 문의</span>
+                    <span>제작자</span>
                   </h4>
                   <div className="space-y-3 text-xs text-slate-700">
                     <div>
@@ -346,8 +343,8 @@ export default function AgentDetail({
                       <p className="font-bold text-slate-900 text-sm">{agent.creatorName} / {agent.creatorDept}</p>
                     </div>
                     <div>
-                      <p className="text-slate-400 font-semibold mb-0.5">연락처 / 메신저</p>
-                      <p className="font-mono text-slate-800 break-all">{agent.creatorContact}</p>
+                      <p className="text-slate-400 font-semibold mb-0.5">연락처</p>
+                      <p className="font-medium text-slate-900 text-sm">{agent.creatorContact || 'contact@hyundaicorp.com'}</p>
                     </div>
                   </div>
 
@@ -373,15 +370,10 @@ export default function AgentDetail({
                   )}
                 </div>
               </div>
-            </div>
-          )}
-
-          {/* 2. Tab Content: Key Functions */}
-          {activeTab === 'features' && (
-            <div className="space-y-6 animate-fade-in" id="tab-features">
-              <div className="space-y-4">
+              {/* 주요 구현 기능 리스트 */}
+              <div className="space-y-4 pt-6 border-t border-slate-100">
                 <h4 className="text-sm font-bold text-slate-900">🔍 주요 구현 기능 리스트</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="flex flex-col gap-4">
                   {agent.features.map((feature, idx) => (
                     <div key={idx} className="bg-slate-50 border border-slate-100 rounded-lg p-4 flex items-start space-x-3 shadow-sm hover:border-blue-100 transition-colors">
                       <div className="h-6 w-6 rounded-full bg-blue-50 text-hyundai-blue border border-blue-100 font-bold text-xs flex items-center justify-center flex-shrink-0 shadow-inner">
@@ -393,176 +385,70 @@ export default function AgentDetail({
                 </div>
               </div>
 
-              {/* Mock System Screenshot Placeholder */}
-              <div className="bg-slate-900 rounded-xl p-5 border border-slate-800 space-y-3">
-                <div className="flex items-center justify-between border-b border-slate-800 pb-2">
-                  <div className="flex items-center space-x-2">
-                    <span className="w-3 h-3 rounded-full bg-red-500"></span>
-                    <span className="w-3 h-3 rounded-full bg-yellow-500"></span>
-                    <span className="w-3 h-3 rounded-full bg-green-500"></span>
-                    <span className="text-[11px] text-slate-400 font-mono ml-2">h_agent_visualization_panel.log</span>
+              {/* Agent 화면 (Carousel) */}
+              <div className="space-y-4 pt-6 border-t border-slate-100">
+                <h4 className="text-sm font-bold text-slate-900">💻 Agent 화면</h4>
+                <div className="relative bg-slate-900 rounded-xl overflow-hidden aspect-video flex items-center justify-center border border-slate-800 group">
+                  <img src={mockImages[activeImageIndex]} alt="Agent Screen" className="w-full h-full object-cover opacity-90 transition-opacity" />
+                  
+                  {/* Prev/Next buttons */}
+                  <button onClick={handlePrevImage} className="absolute left-4 p-2 rounded-full bg-black/50 text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/80">
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+                  </button>
+                  <button onClick={handleNextImage} className="absolute right-4 p-2 rounded-full bg-black/50 text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/80">
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+                  </button>
+
+                  <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex space-x-2">
+                    {mockImages.map((_, idx) => (
+                      <button key={idx} onClick={() => setActiveImageIndex(idx)} className={`w-2 h-2 rounded-full transition-colors ${idx === activeImageIndex ? 'bg-white' : 'bg-white/40'}`} />
+                    ))}
                   </div>
-                  <span className="text-[10px] text-blue-300 font-mono font-bold">ACTIVE (PREVIEW)</span>
                 </div>
-                <div className="py-6 flex flex-col items-center justify-center text-center space-y-2">
-                  <div className="p-3 bg-blue-950/40 rounded-full border border-blue-900/40 text-blue-300 animate-pulse">
-                    <Sparkles className="h-8 w-8" />
+              </div>
+
+              {/* Core Response Reactions Bar */}
+              <div className="border-t border-slate-100 pt-6">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-slate-50 border border-slate-200 p-4 rounded-xl">
+                  <div className="space-y-1">
+                    <h4 className="text-sm font-bold text-slate-900">🙌 이 에이전트가 업무에 도움이 되었나요?</h4>
+                    <p className="text-[11px] text-slate-500">실제 업무 도입 및 동료들의 피드백을 축적하여 우수 에이전트를 가려냅니다.</p>
                   </div>
-                  <h5 className="text-sm font-bold text-white">현업 UI 캡처 및 아키텍처 다이어그램</h5>
-                  <p className="text-xs text-slate-400 max-w-md leading-relaxed">
-                    본 에이전트는 사내 RPA 솔루션 또는 사내 챗봇 연동 모듈을 통해 현대코퍼레이션 클라우드 환경에서 안전하게 연산되고 있습니다.
-                  </p>
+
+                  {/* Simplified Like/Helpful Button */}
+                  <button
+                    onClick={() => onLike(agent.id)}
+                    className={`flex items-center space-x-2 px-5 py-2.5 rounded-xl text-xs font-bold border transition-all ${
+                      currentUser && agent.likedBy.includes(currentUser.employeeId)
+                        ? 'bg-rose-50 border-rose-200 text-rose-600 scale-105 shadow-sm'
+                        : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-100 shadow-sm'
+                    }`}
+                    id="btn-detail-like"
+                  >
+                    <ThumbsUp className={`h-3.5 w-3.5 ${currentUser && agent.likedBy.includes(currentUser.employeeId) ? 'fill-rose-500 text-rose-600' : ''}`} />
+                    <span>도움돼요 ({agent.likes})</span>
+                  </button>
                 </div>
               </div>
             </div>
           )}
 
-          {/* 3. Tab Content: How to Use */}
-          {activeTab === 'guide' && (
-            <div className="space-y-6 animate-fade-in" id="tab-guide">
-              <h4 className="text-sm font-bold text-slate-900 mb-4">📖 Step-by-Step 실무 적용 사용 가이드</h4>
-              <div className="space-y-6 relative pl-6 before:absolute before:left-2.5 before:top-2 before:bottom-2 before:w-0.5 before:bg-slate-200">
-                {agent.steps.map((step, idx) => (
-                  <div key={idx} className="relative space-y-1.5">
-                    {/* Floating number bullet */}
-                    <div className="absolute -left-9 top-0 h-6 w-6 rounded-full bg-hyundai-blue text-white border-2 border-white text-xs font-bold flex items-center justify-center shadow-sm">
-                      {idx + 1}
-                    </div>
-                    <h5 className="text-sm font-bold text-slate-900">Step {idx + 1}</h5>
-                    <p className="text-sm text-slate-700 leading-relaxed font-medium bg-slate-50 p-3 rounded-lg border border-slate-100">
-                      {step}
-                    </p>
-                  </div>
-                ))}
+          {/* 2. Tab Content: Agent 시연 영상 (demo) */}
+          {activeTab === 'demo' && (
+            <div className="space-y-6 animate-fade-in h-full flex flex-col" id="tab-demo">
+              <h4 className="text-sm font-bold text-slate-900">▶️ Agent 시연 영상</h4>
+              <div className="relative bg-black rounded-xl overflow-hidden aspect-video flex-grow shadow-lg border border-slate-800">
+                <iframe 
+                  className="absolute inset-0 w-full h-full"
+                  src="https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=0&rel=0" 
+                  title="Agent 시연 영상"
+                  frameBorder="0" 
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+                  allowFullScreen
+                ></iframe>
               </div>
             </div>
           )}
-
-          {/* 4. Tab Content: Code / Prompt Share */}
-          {activeTab === 'prompt' && (
-            <div className="space-y-4 animate-fade-in" id="tab-prompt">
-              <div className="flex items-center justify-between">
-                <h4 className="text-sm font-bold text-slate-900 flex items-center gap-1.5">
-                  <Code className="h-4 w-4 text-hyundai-blue" />
-                  <span>핵심 구현 소스 코드 (Core Logic Code)</span>
-                </h4>
-                <button
-                  onClick={handleCopyPrompt}
-                  className="flex items-center space-x-1.5 px-3 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded transition-colors border border-slate-200"
-                  id="btn-copy-prompt"
-                >
-                  {copied ? (
-                    <>
-                      <Check className="h-3.5 w-3.5 text-green-600" />
-                      <span className="text-green-600">복사 완료</span>
-                    </>
-                  ) : (
-                    <>
-                      <Copy className="h-3.5 w-3.5" />
-                      <span>코드 복사</span>
-                    </>
-                  )}
-                </button>
-              </div>
-
-              <div className="bg-slate-950 rounded-xl p-4 border border-slate-800 max-h-96 overflow-y-auto shadow-inner">
-                <pre className="text-xs text-slate-300 font-mono leading-relaxed whitespace-pre-wrap break-all">
-                  {agent.prompt}
-                </pre>
-              </div>
-              <p className="text-[11px] text-slate-400 font-medium">
-                💡 구현된 백엔드 또는 비즈니스 연산 소스 코드를 복사하여 사내 시스템 연동 및 분석용 스크립트로 즉시 활용할 수 있습니다.
-              </p>
-            </div>
-          )}
-
-          {/* Core Response Reactions Bar */}
-          <div className="border-t border-slate-100 pt-6">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-slate-50 border border-slate-200 p-4 rounded-xl">
-              <div className="space-y-1">
-                <h4 className="text-sm font-bold text-slate-900">🙌 이 에이전트가 업무에 도움이 되었나요?</h4>
-                <p className="text-[11px] text-slate-500">실제 업무 도입 및 동료들의 피드백을 축적하여 우수 에이전트를 가려냅니다.</p>
-              </div>
-
-              {/* Simplified Like/Helpful Button */}
-              <button
-                onClick={() => onLike(agent.id)}
-                className={`flex items-center space-x-2 px-5 py-2.5 rounded-xl text-xs font-bold border transition-all ${
-                  currentUser && agent.likedBy.includes(currentUser.employeeId)
-                    ? 'bg-rose-50 border-rose-200 text-rose-600 scale-105 shadow-sm'
-                    : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-100 shadow-sm'
-                }`}
-                id="btn-detail-like"
-              >
-                <ThumbsUp className={`h-3.5 w-3.5 ${currentUser && agent.likedBy.includes(currentUser.employeeId) ? 'fill-rose-500 text-rose-600' : ''}`} />
-                <span>도움돼요 ({agent.likes})</span>
-              </button>
-            </div>
-          </div>
-
-          {/* Comments Section */}
-          <div className="border-t border-slate-100 pt-6 space-y-4">
-            <h4 className="text-sm font-bold text-slate-900 flex items-center space-x-2">
-              <MessageSquare className="h-4 w-4 text-hyundai-blue" />
-              <span>동료 의견 및 활용 후기 ({comments.length})</span>
-            </h4>
-
-            {/* Comment Form */}
-            {currentUser ? (
-              <form onSubmit={handleSendComment} className="flex gap-2">
-                <input
-                  type="text"
-                  value={commentText}
-                  onChange={(e) => setCommentText(e.target.value)}
-                  placeholder="질문, 개선 방안, 혹은 타 부서 응용 아이디어를 공유해 주세요."
-                  className="flex-grow text-xs p-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-hyundai-blue focus:border-hyundai-blue bg-white"
-                  id="comment-input-field"
-                />
-                <button
-                  type="submit"
-                  disabled={!commentText.trim()}
-                  className="px-4 py-2 bg-hyundai-blue hover:bg-hyundai-blue/90 disabled:bg-slate-200 disabled:text-slate-400 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors shadow-sm"
-                  id="btn-comment-submit"
-                >
-                  <Send className="h-3.5 w-3.5" />
-                  <span>등록</span>
-                </button>
-              </form>
-            ) : (
-              <div className="bg-slate-50 rounded-xl p-4 text-center text-xs text-slate-500 border border-slate-200">
-                📢 댓글을 남기거나 좋아요/이모지 공감을 표시하려면 상단의 <strong>사원 로그인</strong>이 필요합니다.
-              </div>
-            )}
-
-            {/* Comments List */}
-            <div className="space-y-3.5 max-h-60 overflow-y-auto pr-2" id="comments-list">
-              {comments.length > 0 ? (
-                comments.map((comment) => (
-                  <div key={comment.id} className="bg-slate-50 rounded-lg p-3 border border-slate-100 flex flex-col space-y-1.5">
-                    <div className="flex justify-between items-center text-xs">
-                      <div className="font-semibold text-slate-800 flex items-center space-x-1.5">
-                        <span>{comment.authorName}</span>
-                        <span className="text-[10px] text-slate-400 font-normal">({comment.authorDept})</span>
-                      </div>
-                      <span className="text-[10px] text-slate-400 font-mono">
-                        {new Date(comment.createdAt).toLocaleDateString('ko-KR', {
-                          month: '2-digit',
-                          day: '2-digit',
-                          hour: '2-digit',
-                          minute: '2-digit'
-                        })}
-                      </span>
-                    </div>
-                    <p className="text-xs text-slate-700 leading-relaxed font-medium">
-                      {comment.content}
-                    </p>
-                  </div>
-                ))
-              ) : (
-                <p className="text-center py-6 text-xs text-slate-400">아직 등록된 활용 제안이 없습니다. 첫 번째 후기를 등록해 보세요!</p>
-              )}
-            </div>
-          </div>
 
         </div>
       </div>

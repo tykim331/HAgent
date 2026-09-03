@@ -5,7 +5,6 @@ import Header from './components/Header';
 import AgentCard from './components/AgentCard';
 import AgentDetail from './components/AgentDetail';
 import AgentForm from './components/AgentForm';
-import Leaderboard from './components/Leaderboard';
 import MyPage from './components/MyPage';
 import AuthModal from './components/AuthModal';
 import { 
@@ -18,7 +17,7 @@ export default function App() {
   const [comments, setComments] = useState<Comment[]>([]);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   
-  const [activeTab, setActiveTab] = useState<'gallery' | 'register' | 'leaderboard' | 'mypage'>('gallery');
+  const [activeTab, setActiveTab] = useState<'gallery' | 'register' | 'mypage'>('gallery');
   const [selectedAgentId, setSelectedAgentId] = useState<string | null>(null);
   const [editingAgent, setEditingAgent] = useState<Agent | null>(null);
   const [showLoginModal, setShowLoginModal] = useState(false);
@@ -35,7 +34,16 @@ export default function App() {
     const savedUser = localStorage.getItem('H_USER');
 
     if (savedAgents) {
-      setAgents(JSON.parse(savedAgents));
+      const parsedAgents = JSON.parse(savedAgents);
+      const updatedAgents = parsedAgents.map((agent: Agent) => {
+        const initial = INITIAL_AGENTS.find(a => a.id === agent.id);
+        if (initial) {
+          return { ...agent, category: initial.category, creatorName: initial.creatorName };
+        }
+        return agent;
+      });
+      setAgents(updatedAgents);
+      localStorage.setItem('H_AGENTS', JSON.stringify(updatedAgents));
     } else {
       setAgents(INITIAL_AGENTS);
       localStorage.setItem('H_AGENTS', JSON.stringify(INITIAL_AGENTS));
@@ -233,7 +241,8 @@ export default function App() {
       agent.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       agent.shortDesc.toLowerCase().includes(searchQuery.toLowerCase()) ||
       agent.creatorName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      agent.creatorDept.toLowerCase().includes(searchQuery.toLowerCase());
+      agent.creatorDept.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (CATEGORY_LABELS[agent.category] || '').toLowerCase().includes(searchQuery.toLowerCase());
 
     const matchesCategory = selectedCategory === 'all' || agent.category === selectedCategory;
 
@@ -249,6 +258,40 @@ export default function App() {
 
   const currentDetailedAgent = agents.find(a => a.id === selectedAgentId);
   const currentAgentComments = comments.filter(c => c.agentId === selectedAgentId);
+
+  const isAdminRoute = window.location.pathname.startsWith('/admin');
+
+  if (isAdminRoute) {
+    return (
+      <div className="min-h-screen bg-hyundai-bg text-slate-800 flex flex-col font-sans" id="app-root-admin">
+        <header className="bg-hyundai-navy text-white shadow-lg p-4">
+          <div className="max-w-7xl mx-auto flex justify-between items-center">
+            <h1 className="text-xl font-bold flex items-center gap-2 cursor-pointer" onClick={() => window.location.href = '/'}>
+              관리자 시스템 - 에이전트 등록
+            </h1>
+            <button onClick={() => window.location.href = '/'} className="text-sm hover:underline">
+              돌아가기
+            </button>
+          </div>
+        </header>
+        <main className="flex-grow max-w-3xl w-full mx-auto px-4 py-8">
+          <AgentForm
+            currentUser={currentUser}
+            onSubmit={(agent) => { 
+              handleSubmitAgent(agent); 
+              alert('등록 완료!');
+              window.location.href = '/'; 
+            }}
+            onCancel={() => { 
+              setEditingAgent(null); 
+              window.location.href = '/'; 
+            }}
+            editingAgent={editingAgent}
+          />
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-hyundai-bg text-slate-800 flex flex-col font-sans" id="app-root">
@@ -365,22 +408,17 @@ export default function App() {
           </div>
         )}
 
-        {/* VIEW 2: REGISTER/EDIT FORM */}
-        {activeTab === 'register' && (
+        {/* VIEW 2: REGISTER/EDIT FORM (Used for editing from MyPage) */}
+        {activeTab === 'register' && editingAgent && (
           <AgentForm
             currentUser={currentUser}
-            onSubmit={handleSubmitAgent}
-            onCancel={() => { setEditingAgent(null); setActiveTab('gallery'); }}
+            onSubmit={(agent) => {
+              handleSubmitAgent(agent);
+              alert('수정 완료!');
+              setActiveTab('mypage');
+            }}
+            onCancel={() => { setEditingAgent(null); setActiveTab('mypage'); }}
             editingAgent={editingAgent}
-          />
-        )}
-
-        {/* VIEW 3: LEADERBOARD */}
-        {activeTab === 'leaderboard' && (
-          <Leaderboard
-            agents={agents}
-            comments={comments}
-            onSelectAgent={handleSelectAgent}
           />
         )}
 

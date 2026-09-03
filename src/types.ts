@@ -6,12 +6,13 @@ export interface User {
 }
 
 export type CategoryType = 
-  | 'report'     // 보고서 자동화
-  | 'analysis'   // 데이터 분석/대시보드
-  | 'prediction' // 예측모델
-  | 'customer'   // 고객응대
-  | 'writing'    // 문서작성
-  | 'etc';       // 기타
+  | 'data_collection'
+  | 'data_analysis'
+  | 'document_creation'
+  | 'data_summarization'
+  | 'prediction_model'
+  | 'visualization_dashboard'
+  | 'etc';
 
 export interface Agent {
   id: string;

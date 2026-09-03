@@ -4,7 +4,7 @@ export const INITIAL_AGENTS: Agent[] = [
   {
     id: 'agent-1',
     name: '철강재 국외 선적 선복량 예측 에이전트',
-    category: 'prediction',
+    category: 'prediction_model',
     shortDesc: '과거 선적 트렌드와 글로벌 해운 데이터를 기반으로 향후 4주간 동남아 노선 선복 배정 한도 및 적정 운임을 예측합니다.',
     painPoint: '해운 동향 및 글로벌 선적 공간 확보 경쟁으로 급변하는 운임과 선적 공간을 사전에 파악하기 어려워 납기 지연 및 물류비 초과가 자주 발생합니다.',
     expectation: '선복 확보율 25% 향상, 선적 지연 클레임 15% 감소, 분기별 물류비용 예측 오차범위 5% 이내로 감소.',
@@ -51,7 +51,7 @@ def predict_shipping_capacity(port_data, scfi_index, historical_shipments):
         "predicted_capacity_teu": int(model_capacity.predict(X[-1:])[0]),
         "congestion_risk": "High" if df['port_congestion_index'].iloc[-1] > 0.75 else "Stable"
     }`,
-    creatorName: '김현우 과장',
+    creatorName: '김현우 프로',
     creatorDept: '철강1본부 수출영업팀',
     creatorContact: 'hw.kim@hyundaicorp.com / 사내 메신저: hw_steel',
     likes: 42,
@@ -70,7 +70,7 @@ def predict_shipping_capacity(port_data, scfi_index, historical_shipments):
   {
     id: 'agent-2',
     name: '석유화학 원자재 계약서 조항 분석기',
-    category: 'writing',
+    category: 'data_analysis',
     shortDesc: '영문 원자재 구매 계약서에서 독소 조항, 손해배상 면책 범위, 상호 책임 규정을 즉시 파싱하여 법무 검토 전 1차 체크리스트를 자동 작성합니다.',
     painPoint: '해외 공급업체들이 제시하는 수십 페이지 분량의 영문 계약서 속 독소 조항(지체상금 면책, 불리한 관할 법원 등)을 실무 부서에서 빠르게 가려내지 못해 초기 법무 조율 시간이 오래 걸립니다.',
     expectation: '계약서 1차 검토 시간 80% 단축(평균 3시간 -> 25분), 중대한 리스크 조항 실무 누락률 0% 달성.',
@@ -123,7 +123,7 @@ def analyze_raw_material_contract(contract_text: str) -> dict:
     )
     
     return response.text`,
-    creatorName: '이지혜 대리',
+    creatorName: '이지혜 프로',
     creatorDept: '화학영업2팀 & 화학법무지원TF',
     creatorContact: 'jh.lee@hyundaicorp.com / 사내 메신저: jh_chem',
     likes: 38,
@@ -141,7 +141,7 @@ def analyze_raw_material_contract(contract_text: str) -> dict:
   {
     id: 'agent-3',
     name: '글로벌 통상 규제 & 관세율 모니터링 봇',
-    category: 'report',
+    category: 'data_collection',
     shortDesc: '주요 교역국(미국, EU, 중국)의 철강/에너지 부문 최신 반덤핑 관세, ESG 탄소세(CBAM) 뉴스 및 규제를 매일 수집하여 맞춤형 아침 보고서를 자동 작성합니다.',
     painPoint: '보호무역주의 기조 확대로 관세 규제가 복잡해졌으나, 수많은 해외 정보원과 관세청 공시 자료를 매일 일일이 리서치하는 데 너무 많은 시간과 에너지가 소모되고 누락 가능성도 높습니다.',
     expectation: '데일리 리서치 시간 90% 이상 감축(매일 1시간 -> 5분), 주요 통상 리스크에 대한 선제적 실무 대응 및 시나리오 대비 가능.',
@@ -200,7 +200,7 @@ export async function scrapeUSDOCTariffs(): Promise<TradeAlert[]> {
     return [];
   }
 }`,
-    creatorName: '박민수 차장',
+    creatorName: '박민수 수석',
     creatorDept: '글로벌경제전략실 정책조사팀',
     creatorContact: 'ms.park@hyundaicorp.com / 사내 메신저: ms_trade',
     likes: 54,
@@ -218,7 +218,7 @@ export async function scrapeUSDOCTariffs(): Promise<TradeAlert[]> {
   {
     id: 'agent-4',
     name: '기계설비 견적 자동 산출 및 영문 제안서 빌더',
-    category: 'analysis',
+    category: 'document_creation',
     shortDesc: '파트너사별 복잡한 부품 단가표를 대조하여 환율 및 타겟 마진 변동성을 시뮬레이션하고, 바이어 맞춤형 영문 오퍼 시트(Offer Sheet)를 즉시 빌드합니다.',
     painPoint: '해외 바이어 스펙에 맞춰 수십 가지 기계 부품 견적을 낼 때, 제조사별 가격표(엑셀)를 대조해가며 다차원 연산하느라 단가 실수가 간혹 발생하고, 견적서 송부까지 꼬박 이틀이 소요됩니다.',
     expectation: '견적 산출 및 영문 오퍼시트 작성 시간 단축 (2일 -> 15분), 기계 사양별 단가 수식 오류 제로화.',
@@ -296,7 +296,7 @@ export function generateOfferSheet(
     terms: \`INCOTERMS 2020: \${config.incoterms}, Validity: 15 Days, Origin: South Korea\`
   };
 }`,
-    creatorName: '최진우 과장',
+    creatorName: '최진우 수석',
     creatorDept: '기계수출사업부 기계2팀',
     creatorContact: 'jw.choi@hyundaicorp.com / 사내 메신저: jw_machinery',
     likes: 29,
@@ -314,7 +314,7 @@ export function generateOfferSheet(
   {
     id: 'agent-5',
     name: '인도네시아/인도 석탄 광물 시세 예측 및 마진 분석기',
-    category: 'prediction',
+    category: 'data_analysis',
     shortDesc: '런던금속거래소(LME) 원자재 시세, 인도네시아 고시 광물가격(HBA) 추이를 머신러닝 시나리오와 연동하여 트레이딩 마진 및 거래 리스크를 예측합니다.',
     painPoint: '글로벌 석탄 및 자원 시세는 중국의 수입 제한이나 글로벌 원자재 지수에 극도로 밀접해 마진 변동 폭이 큽니다. 예측치 수동 산출 시 소요 시간이 너무 길고 타이밍을 놓쳐 매입 리스크가 가중됩니다.',
     expectation: '최적 매입 시점 도출을 통한 광물 트레이딩 분기 마진율 평균 2.8% 개선 및 재고 리스크 최소화.',
@@ -374,7 +374,7 @@ export function generateOfferSheet(
         "margin_percentage": round(margin_percentage, 2),
         "scenarios": scenarios
     }`,
-    creatorName: '정소민 대리',
+    creatorName: '정소민 프로',
     creatorDept: '에너지자원개발본부 자원영업팀',
     creatorContact: 'sm.jung@hyundaicorp.com / 사내 메신저: sm_coal',
     likes: 31,
@@ -392,7 +392,7 @@ export function generateOfferSheet(
   {
     id: 'agent-6',
     name: '글로벌 바이어 컴플레인 대응 다국어 영업 메일 에이전트',
-    category: 'customer',
+    category: 'document_creation',
     shortDesc: '격앙된 해외 바이어의 불만이 담긴 이메일을 입력하면, 문맥을 분석해 핵심 쟁점을 도출하고 상대방 문화권 비즈니스 예절에 맞는 맞춤형 사과 및 협상 메일 초안을 작성합니다.',
     painPoint: '제품 품질 불량이나 선박 지연으로 바이어의 감정적인 이메일이 왔을 때, 즉각적이고 적절한 영문 톤 조절이 어려워 자칫 외교적 결례나 법적 분쟁으로 번질 수 있으며, 작성 시간이 많이 소요됩니다.',
     expectation: '격식 있는 대안 이메일 작성 소요시간 단축 (평균 2시간 -> 10분), 바이어 이탈 방지 및 클레임 해결률 향상.',
@@ -439,7 +439,7 @@ async function generateResponseEmail(complainText, culture, remedyType) {
 
   return response.text;
 }`,
-    creatorName: '강태오 대리',
+    creatorName: '강태오 프로',
     creatorDept: '해외영업지원팀 중남미파트',
     creatorContact: 'to.kang@hyundaicorp.com / 사내 메신저: to_latin',
     likes: 47,
@@ -461,7 +461,7 @@ export const INITIAL_COMMENTS: Comment[] = [
   {
     id: 'comment-1',
     agentId: 'agent-1',
-    authorName: '이동준 부장',
+    authorName: '이동준 수석',
     authorDept: '철강물류그룹',
     authorId: 'emp-101',
     content: '부트캠프에서 이런 엄청난 결과물이 나왔군요! 동남아 철강재 해송 단가 예측 오차가 크지 않다면 당장 다음 주 선적 계약부터 활용해보고 싶습니다. 물류그룹에서도 데이터 보강에 참여하겠습니다.',
@@ -470,7 +470,7 @@ export const INITIAL_COMMENTS: Comment[] = [
   {
     id: 'comment-2',
     agentId: 'agent-1',
-    authorName: '박소현 과장',
+    authorName: '박소현 프로',
     authorDept: '철강2본부 남미팀',
     authorId: 'emp-102',
     content: '동남아 노선 말고 혹시 남미나 대서양 노선도 확장 계획이 있으신가요? 남미 쪽 해송 적체가 정말 심한데, 예측 모델이 추가된다면 현업에 엄청난 힘이 될 것 같습니다.',
@@ -479,7 +479,7 @@ export const INITIAL_COMMENTS: Comment[] = [
   {
     id: 'comment-3',
     agentId: 'agent-2',
-    authorName: '최예원 대리',
+    authorName: '최예원 사원',
     authorDept: '준법지원팀',
     authorId: 'emp-103',
     content: '법무TF에서 직접 만드셔서 그런지 계약서 검토 핵심 리스크 포인트가 아주 잘 잡혀 있네요. 관할법원 관례 분석 부분은 저희 신입사원 법률 교육용 프롬프트로 추천하고 싶을 정도입니다.',
@@ -497,7 +497,7 @@ export const INITIAL_COMMENTS: Comment[] = [
   {
     id: 'comment-5',
     agentId: 'agent-6',
-    authorName: 'Sarah Smith 과장',
+    authorName: 'Sarah Smith 프로',
     authorDept: '싱가포르지사 영업파트',
     authorId: 'emp-105',
     content: 'As a local branch manager, sometimes we get very emotional emails from clients. This agent provides professional, well-structured emails that calm the situation down. Highly recommended for regional offices!',
@@ -506,20 +506,22 @@ export const INITIAL_COMMENTS: Comment[] = [
 ];
 
 export const CATEGORY_LABELS: Record<string, string> = {
-  report: '보고서 자동화',
-  analysis: '데이터 분석/대시보드',
-  prediction: '예측모델',
-  customer: '고객응대',
-  writing: '문서작성',
+  data_collection: 'Data 수집',
+  data_analysis: 'Data 분석',
+  document_creation: '문서 작성',
+  data_summarization: 'Data 요약',
+  prediction_model: '예측모델',
+  visualization_dashboard: '시각화 대쉬보드',
   etc: '기타'
 };
 
 export const CATEGORY_COLORS: Record<string, { bg: string; text: string; border: string }> = {
-  report: { bg: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-200' },
-  analysis: { bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-200' },
-  prediction: { bg: 'bg-violet-50', text: 'text-violet-700', border: 'border-violet-200' },
-  customer: { bg: 'bg-amber-50', text: 'text-amber-700', border: 'border-amber-200' },
-  writing: { bg: 'bg-rose-50', text: 'text-rose-700', border: 'border-rose-200' },
+  data_collection: { bg: 'bg-indigo-50', text: 'text-indigo-700', border: 'border-indigo-200' },
+  data_analysis: { bg: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-200' },
+  document_creation: { bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-200' },
+  data_summarization: { bg: 'bg-amber-50', text: 'text-amber-700', border: 'border-amber-200' },
+  prediction_model: { bg: 'bg-violet-50', text: 'text-violet-700', border: 'border-violet-200' },
+  visualization_dashboard: { bg: 'bg-rose-50', text: 'text-rose-700', border: 'border-rose-200' },
   etc: { bg: 'bg-slate-100', text: 'text-slate-700', border: 'border-slate-300' }
 };
 

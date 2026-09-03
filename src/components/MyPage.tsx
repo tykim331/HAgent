@@ -76,7 +76,7 @@ export default function MyPage({
             {currentUser.name.slice(0, 2)}
           </div>
           <div>
-            <h2 className="text-lg font-extrabold text-slate-900">{currentUser.name} {currentUser.role === 'admin' ? '관리자' : '대리'}</h2>
+            <h2 className="text-lg font-extrabold text-slate-900">{currentUser.name} {currentUser.role === 'admin' ? '관리자' : '프로'}</h2>
             <p className="text-xs text-slate-500">{currentUser.department} | 사번: {currentUser.employeeId}</p>
           </div>
         </div>
