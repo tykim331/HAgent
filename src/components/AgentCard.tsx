@@ -65,7 +65,7 @@ export default function AgentCard({ agent, onSelect }: AgentCardProps) {
           <h3 className="text-sm font-bold text-slate-900 line-clamp-1 group-hover:text-hyundai-blue transition-colors">
             {agent.name}
           </h3>
-          <p className="text-xs text-slate-500 line-clamp-2 h-8 leading-relaxed">
+          <p className="text-xs text-slate-500 line-clamp-3 h-[54px] leading-relaxed">
             {agent.shortDesc}
           </p>
         </div>
