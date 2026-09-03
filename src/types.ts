@@ -25,6 +25,7 @@ export interface Agent {
   steps: string[]; // Step-by-step guides
   prompt: string; // Core system prompt / code
   creatorName: string;
+  creatorRank?: string;
   creatorDept: string;
   creatorContact: string;
   likes: number;
@@ -33,6 +34,8 @@ export interface Agent {
   badge?: 'best_month' | 'excellent' | 'creative' | null;
   createdAt: string;
   thumbnailUrl?: string;
+  screenUrls?: string[];
+  password?: string;
   emojiReactions: {
     [emoji: string]: string[]; // list of employeeIds who clicked this emoji
   };

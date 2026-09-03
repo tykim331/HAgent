@@ -179,6 +179,7 @@ export default function App() {
         steps: agentData.steps || [],
         prompt: agentData.prompt || '',
         creatorName: agentData.creatorName || currentUser?.name || '익명 임직원',
+        creatorRank: agentData.creatorRank || '',
         creatorDept: agentData.creatorDept || currentUser?.department || '현업 부서',
         creatorContact: agentData.creatorContact || '사내 메신저',
         likes: 0,
@@ -186,6 +187,8 @@ export default function App() {
         views: 1,
         createdAt: new Date().toISOString(),
         thumbnailUrl: agentData.thumbnailUrl,
+        screenUrls: agentData.screenUrls || [],
+        password: agentData.password,
         emojiReactions: {
           '👍': [], '🔥': [], '💡': [], '👏': [], '❤️': [], '👀': []
         }
@@ -406,16 +409,16 @@ export default function App() {
           </div>
         )}
 
-        {/* VIEW 2: REGISTER/EDIT FORM (Used for editing from MyPage) */}
-        {activeTab === 'register' && editingAgent && (
+        {/* VIEW 2: REGISTER/EDIT FORM */}
+        {activeTab === 'register' && (
           <AgentForm
             currentUser={currentUser}
             onSubmit={(agent) => {
               handleSubmitAgent(agent);
-              alert('수정 완료!');
-              setActiveTab('mypage');
+              alert(editingAgent ? '수정 완료!' : '등록 완료!');
+              setActiveTab('gallery');
             }}
-            onCancel={() => { setEditingAgent(null); setActiveTab('mypage'); }}
+            onCancel={() => { setEditingAgent(null); setActiveTab('gallery'); }}
             editingAgent={editingAgent}
           />
         )}

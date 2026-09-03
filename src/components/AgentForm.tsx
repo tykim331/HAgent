@@ -40,9 +40,12 @@ export default function AgentForm({
   
   const [prompt, setPrompt] = useState('');
   const [creatorName, setCreatorName] = useState('');
+  const [creatorRank, setCreatorRank] = useState('');
   const [creatorDept, setCreatorDept] = useState('');
   const [creatorContact, setCreatorContact] = useState('');
-  const [thumbnailUrl, setThumbnailUrl] = useState(THUMBNAIL_PRESETS[0].url);
+  const [thumbnailUrl, setThumbnailUrl] = useState('');
+  const [screenUrls, setScreenUrls] = useState<string[]>([]);
+  const [password, setPassword] = useState('');
 
   // Load editing values if preset
   useEffect(() => {
@@ -56,18 +59,25 @@ export default function AgentForm({
       setSteps(editingAgent.steps.length > 0 ? editingAgent.steps : ['']);
       setPrompt(editingAgent.prompt);
       setCreatorName(editingAgent.creatorName);
+      setCreatorRank(editingAgent.creatorRank || '');
       setCreatorDept(editingAgent.creatorDept);
       setCreatorContact(editingAgent.creatorContact);
-      setThumbnailUrl(editingAgent.thumbnailUrl || THUMBNAIL_PRESETS[0].url);
+      setThumbnailUrl(editingAgent.thumbnailUrl || '');
+      setScreenUrls(editingAgent.screenUrls || []);
+      setPassword(editingAgent.password || '');
     } else if (currentUser) {
       // Auto fill creator info from logged-in user
       setCreatorName(currentUser.name);
+      setCreatorRank('');
       setCreatorDept(currentUser.department);
       setCreatorContact(`${currentUser.name.toLowerCase()}@hyundaicorp.com / 사내 메신저: ${currentUser.name.toLowerCase()}`);
+      setPassword('');
     }
   }, [editingAgent, currentUser]);
 
-  const handleAddFeature = () => setFeatures([...features, '']);
+  const handleAddFeature = () => {
+    if (features.length < 10) setFeatures([...features, '']);
+  };
   const handleRemoveFeature = (index: number) => {
     const updated = features.filter((_, i) => i !== index);
     setFeatures(updated.length > 0 ? updated : ['']);
@@ -89,9 +99,38 @@ export default function AgentForm({
     setSteps(updated);
   };
 
+  const handleThumbnailUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => setThumbnailUrl(reader.result as string);
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleScreenUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files && files.length > 0) {
+      const readers = Array.from(files).map((file: any) => {
+        return new Promise<string>((resolve) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result as string);
+          reader.readAsDataURL(file);
+        });
+      });
+      Promise.all(readers).then(urls => {
+        setScreenUrls(prev => [...prev, ...urls]);
+      });
+    }
+  };
+
+  const removeScreenUrl = (index: number) => {
+    setScreenUrls(prev => prev.filter((_, i) => i !== index));
+  };
+
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim() || !shortDesc.trim() || !prompt.trim()) return;
+    if (!name.trim() || !shortDesc.trim()) return;
 
     // Filter out empty items
     const filteredFeatures = features.filter(f => f.trim() !== '');
@@ -107,9 +146,12 @@ export default function AgentForm({
       steps: filteredSteps.length > 0 ? filteredSteps : ['사용 방법 가이드가 작성되지 않았습니다.'],
       prompt,
       creatorName,
+      creatorRank,
       creatorDept,
       creatorContact,
-      thumbnailUrl
+      thumbnailUrl,
+      screenUrls,
+      password
     });
   };
 
@@ -120,7 +162,7 @@ export default function AgentForm({
         <div>
           <h2 className="text-xl md:text-2xl font-extrabold text-slate-900 tracking-tight flex items-center gap-2">
             <Sparkles className="h-6 w-6 text-hyundai-blue" />
-            <span>{editingAgent ? '업무용 AI Agent 정보 수정' : '신규 업무용 AI Agent 등록'}</span>
+            <span>{editingAgent ? '업무용 AI Agent 정보 수정' : '신규 AI Agent 등록'}</span>
           </h2>
           <p className="text-xs text-slate-500 mt-1">부트캠프 수료 결과물 또는 현업에서 유용하게 사용하는 에이전트 스펙을 입력해 주세요.</p>
         </div>
@@ -134,11 +176,11 @@ export default function AgentForm({
       </div>
 
       {!currentUser && (
-        <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-start space-x-3 text-xs text-amber-900">
-          <AlertCircle className="h-5 w-5 text-amber-600 flex-shrink-0" />
+        <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 flex items-start space-x-3 text-xs text-blue-900">
+          <Info className="h-5 w-5 text-blue-600 flex-shrink-0" />
           <div className="space-y-1">
-            <h5 className="font-bold">비로그인 등록 경고</h5>
-            <p>현재 로그인되어 있지 않습니다. 등록 시 임의의 임직원 정보로 가입되며, 등록 이후 수정하기 어려울 수 있습니다. 상단에서 로그인을 먼저 하는 것을 추천합니다.</p>
+            <h5 className="font-bold">비로그인 등록 안내</h5>
+            <p>등록하신 에이전트를 나중에 <strong>수정하기 위해서는 비밀번호(4자리)를 설정</strong>해야 합니다.</p>
           </div>
         </div>
       )}
@@ -247,24 +289,48 @@ export default function AgentForm({
               />
             </div>
 
-            {/* Thumbnail presets selection */}
+            {/* Thumbnail Upload */}
             <div className="space-y-2">
-              <label className="text-xs font-bold text-slate-700 block">매칭 대표 이미지 (썸네일)</label>
-              <div className="grid grid-cols-3 gap-2">
-                {THUMBNAIL_PRESETS.map((preset, idx) => (
-                  <div 
-                    key={idx}
-                    onClick={() => setThumbnailUrl(preset.url)}
-                    className={`relative rounded-lg overflow-hidden h-14 border-2 cursor-pointer transition-all ${
-                      thumbnailUrl === preset.url ? 'border-hyundai-blue scale-95 shadow-sm' : 'border-slate-200'
-                    }`}
-                    title={preset.label}
-                  >
-                    <img src={preset.url} alt={preset.label} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-                    <div className="absolute inset-0 bg-slate-900/10 hover:bg-transparent"></div>
-                  </div>
-                ))}
-              </div>
+              <label className="text-xs font-bold text-slate-700 block">매칭 대표 이미지 (썸네일, 1개)</label>
+              <input 
+                type="file" 
+                accept="image/*" 
+                onChange={handleThumbnailUpload} 
+                className="w-full text-xs p-2 border border-slate-300 rounded bg-white"
+              />
+              {thumbnailUrl && (
+                <div className="relative rounded-lg overflow-hidden h-24 border border-slate-200 mt-2">
+                  <img src={thumbnailUrl} alt="Thumbnail preview" className="w-full h-full object-cover" />
+                </div>
+              )}
+            </div>
+
+            {/* Screen Uploads */}
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-slate-700 block">Agent 화면 (다중 선택 가능)</label>
+              <input 
+                type="file" 
+                accept="image/*" 
+                multiple 
+                onChange={handleScreenUpload} 
+                className="w-full text-xs p-2 border border-slate-300 rounded bg-white"
+              />
+              {screenUrls.length > 0 && (
+                <div className="grid grid-cols-3 gap-2 mt-2">
+                  {screenUrls.map((url, idx) => (
+                    <div key={idx} className="relative rounded-lg overflow-hidden h-20 border border-slate-200 group">
+                      <img src={url} alt={`Screen ${idx}`} className="w-full h-full object-cover" />
+                      <button 
+                        type="button" 
+                        onClick={() => removeScreenUrl(idx)}
+                        className="absolute top-1 right-1 bg-rose-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -275,7 +341,7 @@ export default function AgentForm({
           {/* Major Features */}
           <div className="space-y-3">
             <div className="flex justify-between items-center">
-              <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">🛠️ 구현 기능 리스트 (최대 4개)</label>
+              <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">🛠️ 주요 구현 기능 리스트 (최대 10개)</label>
               <button
                 type="button"
                 onClick={handleAddFeature}
@@ -354,7 +420,7 @@ export default function AgentForm({
         </div>
 
         {/* Creator Info */}
-        <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 grid grid-cols-1 md:grid-cols-3 gap-4 pt-4">
+        <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 grid grid-cols-1 md:grid-cols-4 gap-4 pt-4">
           <div className="space-y-1">
             <label className="text-xs font-bold text-slate-600">제작자명 (실명)</label>
             <input
@@ -365,6 +431,18 @@ export default function AgentForm({
               placeholder="예: 홍길동"
               className="w-full text-xs p-2 border border-slate-300 rounded bg-white"
               id="form-input-creatorname"
+            />
+          </div>
+          <div className="space-y-1">
+            <label className="text-xs font-bold text-slate-600">직급</label>
+            <input
+              type="text"
+              required
+              value={creatorRank}
+              onChange={(e) => setCreatorRank(e.target.value)}
+              placeholder="예: 매니저"
+              className="w-full text-xs p-2 border border-slate-300 rounded bg-white"
+              id="form-input-creatorrank"
             />
           </div>
           <div className="space-y-1">
@@ -380,7 +458,7 @@ export default function AgentForm({
             />
           </div>
           <div className="space-y-1">
-            <label className="text-xs font-bold text-slate-600">연락처 / 사내 메신저</label>
+            <label className="text-xs font-bold text-slate-600">연락처 / 이메일</label>
             <input
               type="text"
               required
@@ -392,6 +470,25 @@ export default function AgentForm({
             />
           </div>
         </div>
+
+        {!currentUser && !editingAgent && (
+          <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 mt-4 w-full md:w-1/3">
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-slate-600">수정용 비밀번호 (4자리 숫자)</label>
+              <input
+                type="password"
+                required
+                maxLength={4}
+                pattern="\d{4}"
+                value={password}
+                onChange={(e) => setPassword(e.target.value.replace(/\D/g, ''))}
+                placeholder="예: 1234"
+                className="w-full text-xs p-2 border border-slate-300 rounded bg-white"
+                id="form-input-password"
+              />
+            </div>
+          </div>
+        )}
 
         {/* Actions Submit / Cancel */}
         <div className="flex justify-end space-x-3 pt-4 border-t border-slate-200">
