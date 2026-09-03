@@ -47,6 +47,7 @@ export default function AgentForm({
   const [creatorContact, setCreatorContact] = useState('');
   const [thumbnailUrl, setThumbnailUrl] = useState('');
   const [screenUrls, setScreenUrls] = useState<string[]>([]);
+  const [videoUrl, setVideoUrl] = useState('');
   const [password, setPassword] = useState('');
 
   // Load editing values if preset
@@ -66,6 +67,7 @@ export default function AgentForm({
       setCreatorContact(editingAgent.creatorContact);
       setThumbnailUrl(editingAgent.thumbnailUrl || '');
       setScreenUrls(editingAgent.screenUrls || []);
+      setVideoUrl(editingAgent.videoUrl || '');
       setPassword(editingAgent.password || '');
     } else if (currentUser) {
       // Auto fill creator info from logged-in user
@@ -140,6 +142,25 @@ export default function AgentForm({
     }
   };
 
+  const handleVideoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const localUrl = URL.createObjectURL(file);
+      setVideoUrl(localUrl);
+      setIsUploading(true);
+      try {
+        const publicUrl = await uploadFileToSupabase(file);
+        setVideoUrl(publicUrl);
+        URL.revokeObjectURL(localUrl);
+      } catch (err: any) {
+        alert(`시연 영상 업로드에 실패했습니다. (${err.message || err})`);
+        setVideoUrl('');
+      } finally {
+        setIsUploading(false);
+      }
+    }
+  };
+
   const handleScreenUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (files && files.length > 0) {
@@ -193,6 +214,7 @@ export default function AgentForm({
       creatorContact,
       thumbnailUrl,
       screenUrls,
+      videoUrl,
       password
     });
   };
@@ -385,6 +407,41 @@ export default function AgentForm({
                       )}
                     </div>
                   ))}
+                </div>
+              )}
+            </div>
+
+            {/* Video Upload */}
+            <div className="space-y-2 mt-6">
+              <label className="text-xs font-bold text-slate-700 block">Agent 시연 영상 (선택, 1개)</label>
+              <div className="flex items-center gap-3">
+                 <label className="cursor-pointer inline-flex items-center justify-center px-4 py-2 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded-lg text-xs font-bold text-slate-700 transition-colors">
+                   <Plus className="h-4 w-4 mr-1" />
+                   영상 선택
+                   <input 
+                     type="file" 
+                     accept="video/*" 
+                     onChange={handleVideoUpload} 
+                     className="hidden"
+                   />
+                 </label>
+                 {isUploading && !videoUrl && <span className="text-xs text-slate-500 animate-pulse">업로드 중...</span>}
+              </div>
+              {videoUrl && (
+                <div className="relative rounded-lg overflow-hidden border border-slate-200 mt-3 group">
+                  <video src={videoUrl} controls className="w-full max-h-64 object-contain bg-slate-900" />
+                  <button 
+                    type="button" 
+                    onClick={() => setVideoUrl('')}
+                    className="absolute top-2 right-2 bg-rose-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity shadow-sm z-10"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                  {isUploading && videoUrl.startsWith('blob:') && (
+                    <div className="absolute inset-0 bg-white/50 flex items-center justify-center backdrop-blur-[1px] z-10">
+                      <span className="text-xs font-bold text-slate-800 bg-white/80 px-2 py-1 rounded">업로드 중...</span>
+                    </div>
+                  )}
                 </div>
               )}
             </div>

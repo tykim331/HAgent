@@ -502,6 +502,16 @@ export default function AgentDetail({
                 </div>
               </div>
 
+              {/* Agent 영상 */}
+              {agent.videoUrl && (
+                <div className="space-y-4 pt-6 border-t border-slate-100">
+                  <h4 className="text-sm font-bold text-slate-900">🎬 Agent 시연 영상</h4>
+                  <div className="relative bg-slate-900 rounded-xl overflow-hidden aspect-video flex items-center justify-center border border-slate-800">
+                    <video src={agent.videoUrl} controls className="w-full h-full object-contain" />
+                  </div>
+                </div>
+              )}
+
               {/* Core Response Reactions Bar */}
               <div className="border-t border-slate-100 pt-6">
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-slate-50 border border-slate-200 p-4 rounded-xl">

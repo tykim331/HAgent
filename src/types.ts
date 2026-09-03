@@ -35,6 +35,7 @@ export interface Agent {
   createdAt: string;
   thumbnailUrl?: string;
   screenUrls?: string[];
+  videoUrl?: string;
   password?: string;
   emojiReactions: {
     [emoji: string]: string[]; // list of employeeIds who clicked this emoji
