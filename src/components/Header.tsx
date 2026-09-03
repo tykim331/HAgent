@@ -41,7 +41,7 @@ export default function Header({
           {/* Navigation Links */}
           <nav className="hidden md:flex space-x-1" id="desktop-nav">
             <a
-              href="https://bit.ly/hyundaicorp"
+              href="https://kihyeonkwon.notion.site/AI-Agent-39fc3ce583dd81558262f6b72d4bd80c"
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center px-4 py-2 rounded-md text-xs font-bold transition-all duration-200 bg-hyundai-blue text-white shadow-md hover:bg-blue-700"
@@ -106,7 +106,7 @@ export default function Header({
       {/* Mobile Navigation Bar */}
       <div className="md:hidden flex justify-around items-center border-t border-hyundai-blue/20 py-2.5 bg-hyundai-navy/95 backdrop-blur" id="mobile-nav">
         <a
-          href="https://bit.ly/hyundaicorp"
+          href="https://kihyeonkwon.notion.site/AI-Agent-39fc3ce583dd81558262f6b72d4bd80c"
           target="_blank"
           rel="noopener noreferrer"
           className="flex flex-col items-center text-[10px] transition-colors text-blue-300 font-extrabold"
