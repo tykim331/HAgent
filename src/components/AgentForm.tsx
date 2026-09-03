@@ -269,25 +269,8 @@ export default function AgentForm({
           <div className="space-y-5">
             <h3 className="text-sm font-bold text-slate-900 border-b border-slate-100 pb-1.5 flex items-center gap-1.5">
               <Code className="h-4 w-4 text-hyundai-blue" />
-              <span>핵심 지침 및 구현 소스 코드</span>
+              <span>첨부 파일 (선택)</span>
             </h3>
-
-            {/* System Prompt / Code */}
-            <div className="space-y-1.5">
-              <div className="flex items-center justify-between">
-                <label className="text-xs font-bold text-slate-700">구현 소스 코드 및 알고리즘 스크립트</label>
-                <span className="text-[10px] text-slate-400 font-medium">코드 서식 지원</span>
-              </div>
-              <textarea
-                required
-                value={prompt}
-                onChange={(e) => setPrompt(e.target.value)}
-                placeholder="import os&#10;from google import genai&#10;...&#10;def run_agent_engine(data):&#10;    # 에이전트 핵심 구현 코드를 입력하세요"
-                rows={9}
-                className="w-full text-xs p-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-hyundai-blue font-mono leading-relaxed bg-slate-50"
-                id="form-textarea-prompt"
-              />
-            </div>
 
             {/* Thumbnail Upload */}
             <div className="space-y-2">
@@ -335,8 +318,8 @@ export default function AgentForm({
           </div>
         </div>
 
-        {/* Dynamic List Section: Features & Steps */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-slate-200">
+        {/* Dynamic List Section: Features */}
+        <div className="grid grid-cols-1 gap-6 pt-4 border-t border-slate-200">
           
           {/* Major Features */}
           <div className="space-y-3">
@@ -377,46 +360,6 @@ export default function AgentForm({
               ))}
             </div>
           </div>
-
-          {/* Steps */}
-          <div className="space-y-3">
-            <div className="flex justify-between items-center">
-              <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">📖 단계별 사용 방법 가이드</label>
-              <button
-                type="button"
-                onClick={handleAddStep}
-                className="inline-flex items-center space-x-1 text-xs text-hyundai-blue hover:underline font-bold"
-                id="form-btn-add-step"
-              >
-                <Plus className="h-3 w-3" />
-                <span>추가</span>
-              </button>
-            </div>
-
-            <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
-              {steps.map((step, idx) => (
-                <div key={idx} className="flex gap-2 items-center">
-                  <span className="text-xs text-slate-400 font-semibold w-4">{idx + 1}.</span>
-                  <input
-                    type="text"
-                    value={step}
-                    onChange={(e) => handleStepChange(idx, e.target.value)}
-                    placeholder="예: 바이어 견적 사양서를 이메일에서 복사하여 본문에 넣습니다."
-                    className="flex-grow text-xs p-2 border border-slate-300 rounded"
-                    id={`form-step-input-${idx}`}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveStep(idx)}
-                    className="p-1.5 text-rose-500 hover:bg-rose-50 rounded"
-                    title="삭제"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
-                </div>
-              ))}
-            </div>
-          </div>
         </div>
 
         {/* Creator Info */}
@@ -440,7 +383,7 @@ export default function AgentForm({
               required
               value={creatorRank}
               onChange={(e) => setCreatorRank(e.target.value)}
-              placeholder="예: 매니저"
+              placeholder="예: 프로"
               className="w-full text-xs p-2 border border-slate-300 rounded bg-white"
               id="form-input-creatorrank"
             />
@@ -452,7 +395,7 @@ export default function AgentForm({
               required
               value={creatorDept}
               onChange={(e) => setCreatorDept(e.target.value)}
-              placeholder="예: 철강3팀"
+              placeholder="예: 인재개발팀"
               className="w-full text-xs p-2 border border-slate-300 rounded bg-white"
               id="form-input-creatordept"
             />
