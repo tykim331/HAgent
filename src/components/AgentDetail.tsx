@@ -542,15 +542,16 @@ export default function AgentDetail({
           {activeTab === 'demo' && (
             <div className="space-y-6 animate-fade-in h-full flex flex-col" id="tab-demo">
               <h4 className="text-sm font-bold text-slate-900">▶️ Agent 시연 영상</h4>
-              <div className="relative bg-black rounded-xl overflow-hidden aspect-video flex-grow shadow-lg border border-slate-800">
-                <iframe 
-                  className="absolute inset-0 w-full h-full"
-                  src="https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=0&rel=0" 
-                  title="Agent 시연 영상"
-                  frameBorder="0" 
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
-                  allowFullScreen
-                ></iframe>
+              <div className="relative bg-black rounded-xl overflow-hidden aspect-video flex-grow shadow-lg border border-slate-800 flex items-center justify-center">
+                {agent.videoUrl ? (
+                  <video 
+                    src={agent.videoUrl} 
+                    controls 
+                    className="absolute inset-0 w-full h-full object-contain"
+                  />
+                ) : (
+                  <div className="text-slate-400 text-sm font-medium">등록된 시연 영상이 없습니다.</div>
+                )}
               </div>
             </div>
           )}

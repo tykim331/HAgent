@@ -174,6 +174,7 @@ export default function App() {
         createdAt: new Date().toISOString(),
         thumbnailUrl: agentData.thumbnailUrl,
         screenUrls: agentData.screenUrls || [],
+        videoUrl: agentData.videoUrl || '',
         password: agentData.password,
         emojiReactions: {
           '👍': [], '🔥': [], '💡': [], '👏': [], '❤️': [], '👀': []
