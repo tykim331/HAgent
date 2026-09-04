@@ -281,7 +281,7 @@ export default function AgentDetail({
             </div>
             <h2 className="text-xl font-extrabold tracking-tight text-white leading-snug">{agent.name}</h2>
             <p className="text-slate-300 text-xs flex items-center gap-1.5 font-medium">
-              <span>제작자: <strong className="text-white">{agent.creatorName}</strong> ({agent.creatorDept})</span>
+              <span>제작자: <strong className="text-white">{agent.creatorName}{agent.creatorRank ? ` ${agent.creatorRank}` : ''}</strong> ({agent.creatorDept})</span>
               <span className="h-2 w-px bg-white/20"></span>
               <span className="flex items-center"><Calendar className="h-3 w-3 mr-1" /> {new Date(agent.createdAt).toLocaleDateString()}</span>
             </p>
@@ -431,7 +431,7 @@ export default function AgentDetail({
                   <div className="space-y-3 text-xs text-slate-700">
                     <div>
                       <p className="text-slate-400 font-semibold mb-0.5">이름/부서</p>
-                      <p className="font-bold text-slate-900 text-sm">{agent.creatorName} / {agent.creatorDept}</p>
+                      <p className="font-bold text-slate-900 text-sm">{agent.creatorName}{agent.creatorRank ? ` ${agent.creatorRank}` : ''} / {agent.creatorDept}</p>
                     </div>
                     <div>
                       <p className="text-slate-400 font-semibold mb-0.5">연락처</p>
