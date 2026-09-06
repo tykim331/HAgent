@@ -41,7 +41,7 @@ export default function Header({
           {/* Navigation Links */}
           <nav className="hidden md:flex space-x-1" id="desktop-nav">
             <a
-              href="https://kihyeonkwon.notion.site/AI-Agent-39fc3ce583dd81558262f6b72d4bd80c"
+              href="https://kihyeonkwon.notion.site/AX-3d3c3ce583dd80eea70dc287b276d1ef"
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center px-4 py-2 rounded-md text-xs font-bold transition-all duration-200 bg-hyundai-blue text-white shadow-md hover:bg-blue-700"
